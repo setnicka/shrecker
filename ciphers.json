@@ -1,0 +1,28 @@
+[{
+	"id": "prvni",
+	"name": "Úvodní labyrint",
+	"start_visible": true,
+	"arrival_code": "START",
+	"arrival_text": "vitejte na stanovisti",
+	"advance_code": "LABYRINT",
+	"advance_text": "Správně, další stanoviště je na ...",
+	"position": {
+		"lat": 50.1672161,
+		"lon": 14.4544861,
+		"radius": 30
+	},
+	"skip_text": "Další stanoviště je na ...",
+	"file": "1-lab.pdf"
+}, {
+	"id": "2",
+	"depends_on": ["prvni"],
+	"name": "Jehla v kupce sena",
+	"arrival_code": "JEHLA",
+	"position": {
+		"lat": 50.1672161,
+		"lon": 14.4544861,
+		"radius": 25
+	},
+	"hint_text": "Magnet pomůže",
+	"skip_text": "Žádné další stanoviště není!"
+}]

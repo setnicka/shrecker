@@ -1,0 +1,36 @@
+[{
+	"id": "A",
+	"name": "Áčka",
+	"login": "aaa",
+	"password": "AAA"
+}, {
+	"id": "B",
+	"name": "Béčka",
+	"login": "bbb",
+	"password": "BBB"
+}, {
+	"id": "C",
+	"name": "Céčka",
+	"login": "ccc",
+	"password": "CCC"
+}, {
+	"id": "D",
+	"name": "Déčka",
+	"login": "ddd",
+	"password": "DDD"
+}, {
+	"id": "E",
+	"name": "Éčka",
+	"login": "eee",
+	"password": "EEE"
+}, {
+	"id": "F",
+	"name": "Efka",
+	"login": "fff",
+	"password": "FFF"
+}, {
+	"id": "G",
+	"name": "Géčka",
+	"login": "ggg",
+	"password": "GGG"
+}]

@@ -47,11 +47,11 @@ func (s *Server) orgLoginPost(w http.ResponseWriter, r *http.Request) {
 		session.Values["authenticated"] = true
 		session.Values["org"] = true
 		session.Save(r, w)
-		http.Redirect(w, r, "/org/", http.StatusSeeOther)
+		http.Redirect(w, r, s.basedir("/org/"), http.StatusSeeOther)
 		return
 	}
 	s.setFlashMessage(w, r, "danger", "Nesprávný login")
-	http.Redirect(w, r, "/org/login", http.StatusSeeOther)
+	http.Redirect(w, r, s.basedir("/org/login"), http.StatusSeeOther)
 }
 
 ////////////////////////////////////////////////////////////////////////////////

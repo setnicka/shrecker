@@ -24,6 +24,7 @@ type Server struct {
 }
 
 type config struct {
+	BaseDir           string `ini:"base_dir"`
 	StaticDir         string `ini:"static_dir"`
 	TemplateDir       string `ini:"template_dir"`
 	ListenAddress     string `ini:"listen_address"`
@@ -73,6 +74,7 @@ func (s *Server) Start() error {
 
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(middleware.CleanPath)
 	r.Use(middleware.StripSlashes)
 	r.Use(middleware.Compress(5))
 	r.Use(csrf.Protect(
@@ -99,7 +101,7 @@ func (s *Server) Start() error {
 
 	// Org pages - redirect on unauthorized
 	r.Route("/org", func(r chi.Router) {
-		r.Use(s.orgAuth("/org/login"))
+		r.Use(s.orgAuth(s.basedir("/org/login")))
 		r.Get("/", s.orgIndex)
 		r.Get("/team/{id}/", s.orgTeam)
 		r.Get("/cipher/{id}/download", s.orgCipherDownload)
@@ -113,7 +115,7 @@ func (s *Server) Start() error {
 
 	// Team pages - redirect on unauthorized
 	r.Route("/", func(r chi.Router) {
-		r.Use(s.teamAuth("/login"))
+		r.Use(s.teamAuth(s.basedir("/login")))
 		r.Get("/", s.teamIndex)
 		r.Post("/", s.teamIndex)
 		r.Get("/cipher/{id}/download", s.teamCipherDownload)

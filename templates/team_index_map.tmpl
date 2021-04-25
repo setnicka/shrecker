@@ -1,32 +1,19 @@
 {{ define "team_index_map" }}
 {{ template "part_head_start" .}}
-	<!-- Leaflet with plugins -->
-	<script type="text/javascript" src="/static/js/jquery-3.5.1.min.js"></script>
-	<script type="text/javascript" src="/static/js/jquery.scrollintoview.min.js"></script>
-	<script src="/static/js/leaflet.js"></script>
-	<link rel="stylesheet" href="/static/css/leaflet.css" />
-
-	<link rel="stylesheet" href="/static/css/font-awesome.min.css">
-	<link rel="stylesheet" href="/static/css/leaflet.extra-markers.min.css">
-	<link rel="stylesheet" href="/static/css/Control.FullScreen.css" />
-
-	<script src="/static/js/leaflet.extra-markers.min.js"></script>
-	<script src="/static/js/Control.FullScreen.js"></script>
-	<!-- <script src="/static/js/leaflet-hash.js"></script> -->
-
-	<script src="/static/js/common.js"></script>
+{{ template "part_head_leaflet" . }}
 {{ template "part_head_end" .}}
 <body>
 
 {{ $now := .Now }}
 {{ $csrf := .CSRF }}
 {{ $game := .GameConfig }}
+{{ $basedir := .Basedir }}
 
 <div id="panel">
 {{ template "part_messageBox" . }}
 
 <div id="team-status">
-	<form method="POST" action="/logout" class="pull-right">
+	<form method="POST" action="{{ $basedir }}/logout" class="pull-right">
 		{{ $csrf }}
 		<button class="btn btn-sm btn-secondary">Odhlásit</button>
 	</form>
@@ -41,7 +28,7 @@
 <h2>Šifry</h2>
 {{ range .Ciphers}}
 	<div class="cipher" id="cipher-{{ .Config.ID }}">
-		<strong>{{ if .GetTeamURL }}<a href="{{ .GetTeamURL }}">{{ .Config.Name }}</a>{{ else }}{{ .Config.Name }}{{ end }}</strong>
+		<strong>{{ if .GetTeamURL }}<a href="{{ $basedir }}{{ .GetTeamURL }}">{{ .Config.Name }}</a>{{ else }}{{ .Config.Name }}{{ end }}</strong>
 		<ul>
 			<li><small>Objeveno v {{ .Status.Arrival | timestamp }}</small></li>
 			{{ if .Status.Advance }}<li><small>Vyřešeno v {{ .Status.Advance | timestamp }}</small></li>{{ end }}
@@ -125,7 +112,7 @@ map.on('click', function(e) {
 	.openOn(map);
 
 	$.ajax({
-		url: '/api/calc-move',
+		url: '{{ .Basedir }}/api/calc-move',
 		data: {
 			lat: e.latlng.lat,
 			lon: e.latlng.lng,

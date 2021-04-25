@@ -4,15 +4,31 @@
 <head>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>{{ .Title }}</title>
-	<link rel="stylesheet" type="text/css" href="/static/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="{{ .Basedir }}/static/css/bootstrap.min.css">
+{{ end }}
+{{ define "part_head_leaflet" }}
+	<!-- Leaflet with plugins -->
+	<script type="text/javascript" src="{{ .Basedir }}/static/js/jquery-3.5.1.min.js"></script>
+	<script type="text/javascript" src="{{ .Basedir }}/static/js/jquery.scrollintoview.min.js"></script>
+	<script src="{{ .Basedir }}/static/js/leaflet.js"></script>
+	<link rel="stylesheet" href="{{ .Basedir }}/static/css/leaflet.css" />
+
+	<link rel="stylesheet" href="{{ .Basedir }}/static/css/font-awesome.min.css">
+	<link rel="stylesheet" href="{{ .Basedir }}/static/css/leaflet.extra-markers.min.css">
+	<link rel="stylesheet" href="{{ .Basedir }}/static/css/Control.FullScreen.css" />
+
+	<script src="{{ .Basedir }}/static/js/leaflet.extra-markers.min.js"></script>
+	<script src="{{ .Basedir }}/static/js/Control.FullScreen.js"></script>
+	<script src="{{ .Basedir }}/static/js/leaflet-hash.js"></script>
+
+	<script src="{{ .Basedir }}/static/js/common.js"></script>
 {{ end }}
 {{ define "part_head_end" }}
-	<link rel="stylesheet" type="text/css" href="/static/css/shrecker.css">
+	<link rel="stylesheet" type="text/css" href="{{ .Basedir }}/static/css/shrecker.css">
 </head>
-<body>
 {{- end }}
 {{ define "part_head_end_org"}}
-	<link rel="stylesheet" type="text/css" href="/static/css/shrecker.css">
-	<link rel="stylesheet" type="text/css" href="/static/css/shrecker-org.css">
+	<link rel="stylesheet" type="text/css" href="{{ .Basedir }}/static/css/shrecker.css">
+	<link rel="stylesheet" type="text/css" href="{{ .Basedir }}/static/css/shrecker-org.css">
 </head>
 {{ end }}

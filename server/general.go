@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"path"
 	"time"
 
 	"github.com/coreos/go-log/log"
@@ -17,6 +18,7 @@ type GeneralData struct {
 	Now      time.Time
 	Messages []flashMessage
 	CSRF     template.HTML
+	Basedir  string
 }
 
 func (s *Server) getGeneralData(title string, w http.ResponseWriter, r *http.Request) GeneralData {
@@ -25,15 +27,20 @@ func (s *Server) getGeneralData(title string, w http.ResponseWriter, r *http.Req
 		Now:      time.Now(),
 		Messages: s.getFlashMessages(w, r),
 		CSRF:     csrf.TemplateField(r),
+		Basedir:  s.config.BaseDir,
 	}
 	return data
 }
 
-func (s Server) logout(w http.ResponseWriter, r *http.Request) {
+func (s *Server) logout(w http.ResponseWriter, r *http.Request) {
 	session, _ := s.sessionStore.Get(r, s.config.SessionCookieName)
 	session.Options.MaxAge = -1
 	session.Save(r, w)
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, s.basedir("/"), http.StatusSeeOther)
+}
+
+func (s *Server) basedir(url string) string {
+	return path.Join(s.config.BaseDir, url)
 }
 
 ////////////////////////////////////////////////////////////////////////////////

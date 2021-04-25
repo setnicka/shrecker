@@ -1,25 +1,12 @@
 {{ define "org_index_map" }}
 {{ template "part_head_start" . }}
-	<!-- Leaflet with plugins -->
-	<script type="text/javascript" src="/static/js/jquery-3.5.1.min.js"></script>
-	<script type="text/javascript" src="/static/js/jquery.scrollintoview.min.js"></script>
-	<script src="/static/js/leaflet.js"></script>
-	<link rel="stylesheet" href="/static/css/leaflet.css" />
-
-	<link rel="stylesheet" href="/static/css/font-awesome.min.css">
-	<link rel="stylesheet" href="/static/css/leaflet.extra-markers.min.css">
-	<link rel="stylesheet" href="/static/css/Control.FullScreen.css" />
-
-	<script src="/static/js/leaflet.extra-markers.min.js"></script>
-	<script src="/static/js/Control.FullScreen.js"></script>
-	<script src="/static/js/leaflet-hash.js"></script>
-
-	<script src="/static/js/common.js"></script>
+{{ template "part_head_leaflet" . }}
 {{ template "part_head_end_org" . }}
 <body class="wide">
 {{ template "part_org_nav" . }}
 
 {{ $now := .Now }}
+{{ $basedir := .Basedir }}
 
 <div id="orgomapa"></div>
 
@@ -33,7 +20,7 @@
 		<th>Tým</th>
 		{{ range .Ciphers }}
 		<th>
-			{{ if .File }}<a href="/org/cipher/{{ .ID }}/download">{{ .Name }}</a>{{ else }}{{ .Name }}{{ end }}
+			{{ if .File }}<a href="{{ $basedir }}/org/cipher/{{ .ID }}/download">{{ .Name }}</a>{{ else }}{{ .Name }}{{ end }}
 			{{ if .HintText }}<span class="hint" title="{{ .HintText }}">[hint]</span>{{ end }}
 			{{ if .SkipText }}<span class="hint" title="{{ .SkipText }}">[skip]</span>{{ end }}
 		</th>

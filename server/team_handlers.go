@@ -93,7 +93,7 @@ func (s *Server) teamLoginPost(w http.ResponseWriter, r *http.Request) {
 	team, _, err := s.game.LoginTeam(login, password)
 	if err == game.ErrLogin {
 		s.setFlashMessage(w, r, "danger", "Nesprávný login")
-		http.Redirect(w, r, "login", http.StatusSeeOther)
+		http.Redirect(w, r, s.basedir("/login"), http.StatusSeeOther)
 		return
 	} else if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -103,11 +103,11 @@ func (s *Server) teamLoginPost(w http.ResponseWriter, r *http.Request) {
 		session.Values["authenticated"] = true
 		session.Values["team"] = team.GetConfig().ID
 		session.Save(r, w)
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		http.Redirect(w, r, s.basedir("/"), http.StatusSeeOther)
 		return
 	}
 	s.setFlashMessage(w, r, "danger", "Nesprávný login")
-	http.Redirect(w, r, "login", http.StatusSeeOther)
+	http.Redirect(w, r, s.basedir("login"), http.StatusSeeOther)
 }
 
 type cipherInfo struct {
@@ -218,7 +218,7 @@ func (s *Server) teamIndex(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		http.Redirect(w, r, s.basedir("/"), http.StatusSeeOther)
 		return
 	}
 

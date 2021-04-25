@@ -59,6 +59,7 @@ func New(config *ini.File, game *game.Game) (*Server, error) {
 	// Setup cookie store
 	cookieStore := sessions.NewCookieStore([]byte(s.config.SessionSecret))
 	cookieStore.MaxAge(s.config.SessionMaxAge)
+	cookieStore.Options.Secure = true
 	//cookieStore.Options.Domain = ".fuf.me"
 	s.sessionStore = cookieStore
 

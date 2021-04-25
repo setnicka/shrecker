@@ -9,6 +9,7 @@ import (
 	"github.com/go-ini/ini"
 	_ "github.com/lib/pq"
 	"github.com/pkg/errors"
+	"github.com/setnicka/shrecker/game"
 	"github.com/urfave/cli"
 )
 
@@ -63,11 +64,14 @@ func commandRunServer(c *cli.Context) error {
 		return errors.Wrapf(err, "Cannot open config file '%s'", configfile)
 	}
 
-	// 2. Load game data
-	// TODO
+	// 2. Open connection to the DB
+	db, err := dbConnect(config)
+	if err != nil {
+		return err
+	}
 
-	// 3. Open connection to the DB
-	_, err = dbConnect(config)
+	// 3. Init game
+	g, err := game.New(config, db)
 	if err != nil {
 		return err
 	}

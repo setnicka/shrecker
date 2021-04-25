@@ -6,8 +6,12 @@ require (
 	github.com/Songmu/prompter v0.5.0
 	github.com/coreos/go-log v0.0.0-20180308165134-b22fd89e1882
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
+	github.com/go-chi/chi v1.5.4
+	github.com/go-chi/render v1.0.1
 	github.com/go-ini/ini v1.62.0
 	github.com/gopherjs/gopherjs v0.0.0-20210413103415-7d3cbed7d026 // indirect
+	github.com/gorilla/csrf v1.7.0
+	github.com/gorilla/sessions v1.2.1
 	github.com/jmoiron/sqlx v1.3.3
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 	github.com/lib/pq v1.10.0

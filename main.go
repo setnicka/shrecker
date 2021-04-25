@@ -10,6 +10,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/pkg/errors"
 	"github.com/setnicka/shrecker/game"
+	"github.com/setnicka/shrecker/server"
 	"github.com/urfave/cli"
 )
 
@@ -77,9 +78,13 @@ func commandRunServer(c *cli.Context) error {
 	}
 
 	// 4. Start the server
-	// TODO
+	server, err := server.New(config, g)
+	if err != nil {
+		return err
+	}
+	return server.Start()
 
-	return nil
+	// TODO wait for signal to end or reload
 }
 
 func commandInitDB(c *cli.Context) error {

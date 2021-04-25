@@ -1,0 +1,13 @@
+{{ define "part_org_nav" }}
+<header>
+	<nav id="main-menu">
+		<h1><small>Shrecker</small> {{ .Title }}</h1>
+		<a href="/org/">Přehled</a>
+
+		<form class="right" method="POST" action="/logout">
+			{{ .CSRF }}
+			<input type="submit" value="Odhlásit se">
+		</form>
+	</nav>
+</header>
+{{ end }}

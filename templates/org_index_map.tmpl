@@ -1,0 +1,116 @@
+{{ define "org_index_map" }}
+{{ template "part_head_start" . }}
+	<!-- Leaflet with plugins -->
+	<script type="text/javascript" src="/static/js/jquery-3.5.1.min.js"></script>
+	<script type="text/javascript" src="/static/js/jquery.scrollintoview.min.js"></script>
+	<script src="/static/js/leaflet.js"></script>
+	<link rel="stylesheet" href="/static/css/leaflet.css" />
+
+	<link rel="stylesheet" href="/static/css/font-awesome.min.css">
+	<link rel="stylesheet" href="/static/css/leaflet.extra-markers.min.css">
+	<link rel="stylesheet" href="/static/css/Control.FullScreen.css" />
+
+	<script src="/static/js/leaflet.extra-markers.min.js"></script>
+	<script src="/static/js/Control.FullScreen.js"></script>
+	<script src="/static/js/leaflet-hash.js"></script>
+
+	<script src="/static/js/common.js"></script>
+{{ template "part_head_end_org" . }}
+<body class="wide">
+{{ template "part_org_nav" . }}
+
+{{ $now := .Now }}
+
+<div id="orgomapa"></div>
+
+<main>
+<h2>Stav hry</h2>
+
+{{ template "part_messageBox" . }}
+
+<table id="dashboard">
+	<thead class="thead-light"><tr>
+		<th>Tým</th>
+		{{ range .Ciphers }}
+		<th>
+			{{ if .File }}<a href="/org/cipher/{{ .ID }}/download">{{ .Name }}</a>{{ else }}{{ .Name }}{{ end }}
+			{{ if .HintText }}<span class="hint" title="{{ .HintText }}">[hint]</span>{{ end }}
+			{{ if .SkipText }}<span class="hint" title="{{ .SkipText }}">[skip]</span>{{ end }}
+		</th>
+		{{ end }}
+	</tr></thead>
+	{{ range .Teams }}
+		<tr>
+		<th>{{ .Config.Name }}</th>
+		{{ $team := . }}
+		{{ range $.Ciphers }}
+			{{ $status := index $team.Ciphers .ID }}
+			{{ if not $status.Arrival.IsZero }}
+			<td class="cipher-status {{ if $status.Advance }}status-advance{{ else if $status.Arrival }}status-arrival{{ end }}">
+				{{ $status.Arrival | timestamp_hint }}
+				{{ if $status.Advance }}<br><span class="status-advance">{{ $status.Advance | timestamp_hint }}</span>{{ end }}
+				{{ if $status.Hint }}<br><span class="status-hint">Hint: {{ $status.Hint | timestamp_hint }}</span>{{ end }}
+				{{ if $status.Skip }}<br><span class="status-skip">Skip: {{ $status.Skip | timestamp_hint }}</span>{{ end }}
+				{{ if $status.ExtraPoints }}<br><span class="extra_points">{{ $status.ExtraPoints }}</span>{{ end }}
+			</td>
+			{{ else }}
+			<td>-</td>
+			{{ end }}
+		{{ end }}
+	{{ end }}
+</table>
+
+<div id="team-list">
+	<h2>Týmy</h2>
+	{{ range .Teams}}
+		<div class="team" id="team-{{ .Config.ID }}">
+			<strong>{{ .Config.Name }}</strong> (ID: <code>{{ .Config.ID }}</code>, login: <code>{{ .Config.Login }}</code>)
+			<ul>
+				<li>Poslední pohyb: {{ .Status.LastMoved | timestamp }}</li>
+				<li>Cooldown: {{ if .Status.CooldownTo }}{{ if $now.Before .Status.CooldownTo }}{{ .Status.CooldownTo | timestamp }}{{ end }}{{ end }}</li>
+			</ul>
+		</div>
+	{{ end }}
+	</div>
+</div>
+</main>
+
+<script type="text/javascript">
+// Map:
+
+var map = L.map('orgomapa', {
+	"center": [{{.GameConfig.StartLat}}, {{ .GameConfig.StartLon}}],
+	"zoom": {{ .GameConfig.MapDefaultZoom }}, "minZoom": 6, "maxZoom": 18,
+	"fullscreenControl": true, "fullscreenControlOptions": {"position":"topleft"}
+});
+var hash = new L.Hash(map);
+
+L.tileLayer('https://m{s}.mapserver.mapy.cz/turist-m/{z}-{x}-{y}', {
+	attribution: "<img src='https://mapy.cz/img/logo-small.svg' /> © Seznam.cz,a.s, © Přispěvatelé <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a>, © NASA",
+	subdomains: "1234",
+}).addTo(map);
+
+{{ range .Ciphers }}
+	L.circle([{{ .Position.Lat }}, {{ .Position.Lon }}], {
+		color: 'yellow',
+		fillColor: '#fbff94',
+		fillOpacity: 0.5,
+		radius: {{ .Position.Radius }}
+	}).addTo(map);
+
+	L.marker([{{ .Position.Lat }}, {{ .Position.Lon }}], {
+		title: "{{ .Name }}",
+		icon: cipherIcon,
+	}).addTo(map).on('click', function() {highlightCipher("{{ .ID }}")});
+{{ end }}
+{{ range .Teams }}
+	L.marker([{{ .Status.Lat }}, {{ .Status.Lon }}], {
+		title: "{{ .Config.Name }}",
+		icon: teamIcon,
+	}).addTo(map).on('click', function() {highlightTeam("{{ .Config.ID }}")});
+{{ end}}
+</script>
+
+</body>
+</html>
+{{end}}

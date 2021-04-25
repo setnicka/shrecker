@@ -1,0 +1,161 @@
+{{ define "team_index_map" }}
+{{ template "part_head_start" .}}
+	<!-- Leaflet with plugins -->
+	<script type="text/javascript" src="/static/js/jquery-3.5.1.min.js"></script>
+	<script type="text/javascript" src="/static/js/jquery.scrollintoview.min.js"></script>
+	<script src="/static/js/leaflet.js"></script>
+	<link rel="stylesheet" href="/static/css/leaflet.css" />
+
+	<link rel="stylesheet" href="/static/css/font-awesome.min.css">
+	<link rel="stylesheet" href="/static/css/leaflet.extra-markers.min.css">
+	<link rel="stylesheet" href="/static/css/Control.FullScreen.css" />
+
+	<script src="/static/js/leaflet.extra-markers.min.js"></script>
+	<script src="/static/js/Control.FullScreen.js"></script>
+	<!-- <script src="/static/js/leaflet-hash.js"></script> -->
+
+	<script src="/static/js/common.js"></script>
+{{ template "part_head_end" .}}
+<body>
+
+{{ $now := .Now }}
+{{ $csrf := .CSRF }}
+{{ $game := .GameConfig }}
+
+<div id="panel">
+{{ template "part_messageBox" . }}
+
+<div id="team-status">
+	<form method="POST" action="/logout" class="pull-right">
+		{{ $csrf }}
+		<button class="btn btn-sm btn-secondary">Odhlásit</button>
+	</form>
+	<h2>Tým: {{.TeamConfig.Name}}</h2>
+	<ul>
+		<li>Aktuální pozice: <a href="#">{{ .TeamStatus.GetPosition | latlon }}</a></li>
+		{{ if .TeamStatus.CooldownTo }}{{ if $now.Before .TeamStatus.CooldownTo }}<li>Další pohyb bude možný v {{ .TeamStatus.CooldownTo | timestamp }}</li>{{ end }}{{ end }}
+	</ul>
+</div>
+
+<div id="cipher-list">
+<h2>Šifry</h2>
+{{ range .Ciphers}}
+	<div class="cipher" id="cipher-{{ .Config.ID }}">
+		<strong>{{ if .GetTeamURL }}<a href="{{ .GetTeamURL }}">{{ .Config.Name }}</a>{{ else }}{{ .Config.Name }}{{ end }}</strong>
+		<ul>
+			<li><small>Objeveno v {{ .Status.Arrival | timestamp }}</small></li>
+			{{ if .Status.Advance }}<li><small>Vyřešeno v {{ .Status.Advance | timestamp }}</small></li>{{ end }}
+			{{ if .Status.Hint }}<li><small>Nápověda v {{ .Status.Hint | timestamp }}:</small><br><b>{{ .Config.HintText }}</b>{{ end }}
+			{{ if .Status.Skip }}<li><small>Přeskočeno v {{ .Status.Skip | timestamp }}:</small><br><b>{{ .Config.SkipText }}</b>{{ end }}
+			{{ if .Status.ExtraPoints }}<li><small>{{ if gt .Status.ExtraPoints 0 }}Extra body{{ else }}Penalizace{{ end }}:</small> <b>{{ .Status.ExtraPoints }}</b>{{ end }}
+		</ul>
+		<form method="POST">
+			{{ $csrf }}
+			<input type="hidden" name="cipher" value="{{ .Config.ID }}">
+			<div class="btn-group">
+				{{- if or (.Status.Hint) (.Status.Skip) (.Status.Advance) (not .Config.HintText) }}{{ else }}
+				<input type="submit" name="hint" class="btn btn-sm btn-primary" value="Požádat o nápovědu"
+					{{- if lt ( $now.Sub .Status.Arrival ) $game.HintLimit }} disabled title="Nápovědu lze získat nejdříve {{ $game.HintLimit }} po příchodu"
+					{{- else }} onclick="return confirm('Opravdu požádat o nápovědu k šifře {{ .Config.Name }}? Tato akce nelze vzít zpátky');"
+					{{- end -}}
+				>
+				{{- end }}
+				{{- if or (.Status.Skip) (.Status.Advance) (not .Config.SkipText) }}{{ else }}
+				<input type="submit" name="skip" class="btn btn-sm btn-danger" value="Přeskočit šifru"
+					{{- if lt ( $now.Sub .Status.Arrival ) $game.SkipLimit }} disabled title="Přeskočit šifru lze získat nejdříve {{ $game.SkipLimit }} po příchodu"
+					{{- else }} onclick="return confirm('Opravdu přeskočit šifru {{ .Config.Name }}? Tato akce nelze vzít zpátky');"
+					{{- end -}}
+				>
+				{{- end }}
+			</div>
+		</form>
+	</div>
+{{ end }}
+</div>
+</div>
+
+<div id="mapa" class="clickable"></div>
+
+<script type="text/javascript">
+// Map:
+
+var currentPos = [{{.TeamStatus.Lat}}, {{ .TeamStatus.Lon}}]
+
+var map = L.map('mapa', {
+	"center": currentPos,
+	"zoom": {{ .GameConfig.MapDefaultZoom }}, "minZoom": 6, "maxZoom": 18,
+	"fullscreenControl": true, "fullscreenControlOptions": {"position":"topleft"}
+});
+// var hash = new L.Hash(map);
+
+L.tileLayer('https://m{s}.mapserver.mapy.cz/turist-m/{z}-{x}-{y}', {
+	attribution: "<img src='https://mapy.cz/img/logo-small.svg' /> © Seznam.cz,a.s, © Přispěvatelé <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a>, © NASA",
+	subdomains: "1234",
+}).addTo(map);
+
+{{ range .Ciphers }}
+	L.circle([{{ .Config.Position.Lat }}, {{ .Config.Position.Lon }}], {
+		color: 'yellow',
+		fillColor: '#fbff94',
+		fillOpacity: 0.5,
+		radius: {{ .Config.Position.Radius }}
+	}).addTo(map);
+
+	L.marker([{{ .Config.Position.Lat }}, {{ .Config.Position.Lon }}], {
+		title: "{{ .Config.Name }}",
+		icon: cipherIcon,
+	}).addTo(map).on('click', function() {highlightCipher({{ .Config.ID }})});
+{{ end }}
+
+var marker = L.marker(currentPos, {
+	title: "Vaše poslední pozice",
+	icon: teamIcon,
+}).addTo(map);
+
+
+var lineToClick;
+
+map.on('click', function(e) {
+	if (lineToClick) lineToClick.remove();
+	lineToClick = L.polyline([currentPos, e.latlng]).addTo(map);
+
+	var popup = L.popup()
+	.setLatLng(e.latlng)
+	.setContent('...Počítám vzdálenost...')
+	.openOn(map);
+
+	$.ajax({
+		url: '/api/calc-move',
+		data: {
+			lat: e.latlng.lat,
+			lon: e.latlng.lng,
+		},
+		type: 'GET',
+		dataType: 'json',
+		success: function (data, textStatus, xhr) {
+			if ("error" in data) {
+				if (data["error"] == "cooldown") {
+					popup.setContent("Ještě se nemůžete přesunout, musíte počkat do " + data["cooldown_to"]);
+				} else {
+					popup.setContent("Jiná chyba: " + data["error"]);
+				}
+				return
+			}
+			popup.setContent(
+				"<p>Přesun na vzdálenost <b>" + Math.round(data["distance"]) + " metrů</b>. "
+				+"Přesunete se okamžitě a prohledáte okolí na přítomnost šifer, ale pak si "
+				+"budete muset na <b>" + data["cooldown"] + "</b> odpočinout, než budete moci jít na novou pozici.</p>"
+				+'<form method="POST">{{ .CSRF }}<input type="hidden" name="move-lat" value="' + e.latlng.lat + '">'
+				+'<input type="hidden" name="move-lon" value="' + e.latlng.lng + '"><button class="btn btn-primary">Přesunout se</button></form>'
+			);
+		}
+	});
+}).on('popupclose', function(e) {
+	if (lineToClick) lineToClick.remove();
+});
+
+</script>
+
+</body>
+</html>
+{{end}}

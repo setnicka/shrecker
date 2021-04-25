@@ -1,0 +1,18 @@
+{{ define "team_login" }}
+{{ template "part_head_start" . }}
+{{ template "part_head_end" . }}
+{{ template "part_messageBox" . }}
+
+<div id="loginForm"><div id="loginFormInternal">
+  <h1>Přihlášení do hry</h1>
+  <form method="post" class="form-inline">
+    {{ .CSRF }}
+    <input type="text" name="login" placeholder="Login" class="form-control">
+    <input type="password" name="password" placeholder="Heslo" class="form-control">
+    <input type="submit" value="Přihlásit se" class="btn btn-primary">
+  </form>
+</div></div>
+
+</body>
+</html>
+{{ end }}

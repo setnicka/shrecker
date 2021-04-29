@@ -118,6 +118,7 @@ type teamIndexData struct {
 	teamGeneralData
 	TeamStatus *game.TeamStatus
 	Ciphers    []cipherInfo
+	Locations  []game.TeamLocationEntry
 }
 
 func (s *Server) teamIndex(w http.ResponseWriter, r *http.Request) {
@@ -222,6 +223,13 @@ func (s *Server) teamIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	locations, err := team.GetLocations()
+	if err != nil {
+		log.Errorf("Cannot get team locations: %+v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	switch gameConfig.Mode {
 	case game.GameNormal:
 		http.Error(w, "NOT YET IMPLEMENTED", http.StatusNotImplemented)
@@ -233,6 +241,7 @@ func (s *Server) teamIndex(w http.ResponseWriter, r *http.Request) {
 				teamGeneralData: s.getTeamGeneralData("Mapa šifrovačky", w, r),
 				TeamStatus:      status,
 				Ciphers:         ciphers,
+				Locations:       locations,
 			},
 		)
 	}

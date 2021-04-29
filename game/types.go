@@ -30,6 +30,8 @@ type Team struct {
 	statusLoaded       bool
 	cipherStatus       map[string]CipherStatus
 	cipherStatusLoaded bool
+	locations          []TeamLocationEntry
+	locationsLoaded    bool
 }
 
 ////////////////////////////////////////////////////////////////////////////////

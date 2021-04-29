@@ -99,12 +99,15 @@ var marker = L.marker(currentPos, {
 	icon: teamIcon,
 }).addTo(map);
 
+L.polyline([
+{{- range .Locations }}[{{ .Lat }}, {{ .Lon }}], {{ end -}}
+currentPos], {color: 'yellow'}).addTo(map);
 
 var lineToClick;
 
 map.on('click', function(e) {
 	if (lineToClick) lineToClick.remove();
-	lineToClick = L.polyline([currentPos, e.latlng]).addTo(map);
+	lineToClick = L.polyline([currentPos, e.latlng], {color: 'red'}).addTo(map);
 
 	var popup = L.popup()
 	.setLatLng(e.latlng)

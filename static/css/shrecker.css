@@ -93,6 +93,8 @@ nav#main-menu a.active {
 
 #panel {
 	padding: 10px 5px;
+	max-height: 100vh;
+	overflow-y: scroll;
 }
 
 h2 {
@@ -100,9 +102,13 @@ h2 {
 }
 
 #cipher-list .cipher {
-	border: 1px #cccccc solid;
+	border: 1px #aaa solid;
 	border-radius: 3px;
 	padding: 3px 5px;
+	margin-bottom: 2px;
+}
+#cipher-list .cipher.advance {
+	background-color: rgb(169, 241, 169);
 }
 #cipher-list .cipher.highlight {
 	background-color: rgb(238, 238, 187);
@@ -112,6 +118,7 @@ h2 {
 	list-style-position: inside;
 	list-style-type: square;
 	padding-left: 0px;
+	margin: 0px;
 }
 
 .hint {

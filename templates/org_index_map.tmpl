@@ -35,7 +35,7 @@
 			{{ if not $status.Arrival.IsZero }}
 			<td class="cipher-status {{ if $status.Advance }}status-advance{{ else if $status.Arrival }}status-arrival{{ end }}">
 				{{ $status.Arrival | timestamp_hint }}
-				{{ if $status.Advance }}<br><span class="status-advance">{{ $status.Advance | timestamp_hint }}</span>{{ end }}
+				{{ if $status.Advance }}<br><span class="status-advance">Postup: {{ $status.Advance | timestamp_hint }}</span>{{ end }}
 				{{ if $status.Hint }}<br><span class="status-hint">Hint: {{ $status.Hint | timestamp_hint }}</span>{{ end }}
 				{{ if $status.Skip }}<br><span class="status-skip">Skip: {{ $status.Skip | timestamp_hint }}</span>{{ end }}
 				{{ if $status.ExtraPoints }}<br><span class="extra_points">{{ $status.ExtraPoints }}</span>{{ end }}

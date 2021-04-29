@@ -122,6 +122,6 @@ func (s *Server) Start() error {
 	})
 
 	// 3. Listen on given port
-	log.Info("Server started")
+	log.Infof("Server started at %s", s.config.ListenAddress)
 	return http.ListenAndServe(s.config.ListenAddress, r)
 }

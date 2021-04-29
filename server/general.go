@@ -48,7 +48,7 @@ func (s *Server) basedir(url string) string {
 // flashMessage holds type and content of flash message displayed to the user
 type flashMessage struct {
 	Type    string
-	Message string
+	Message template.HTML
 }
 
 func (s *Server) setFlashMessage(w http.ResponseWriter, r *http.Request, mtype string, messageFormat string, a ...interface{}) {
@@ -60,7 +60,7 @@ func (s *Server) setFlashMessage(w http.ResponseWriter, r *http.Request, mtype s
 	if err != nil {
 		return
 	}
-	session.AddFlash(flashMessage{Type: mtype, Message: message})
+	session.AddFlash(flashMessage{Type: mtype, Message: template.HTML(message)})
 	err = session.Save(r, w)
 	if err != nil {
 		log.Errorf("Cannot save flash message: %v", err)

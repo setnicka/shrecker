@@ -29,6 +29,7 @@ const (
 // Config holds parsed game configuration from the ini file
 type Config struct {
 	Mode          gameMode  `ini:"mode"`
+	LogPrevSolved bool      `ini:"log_prev_solved"`
 	Start         time.Time `ini:"start"`
 	End           time.Time `ini:"end"`
 	CiphersFolder string    `ini:"ciphers_folder"`
@@ -85,6 +86,8 @@ type Point struct {
 	Lon    float64 `json:"lon"`
 	Radius int     `json:"radius,omitempty"` // in meters
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 // Initial checks for all teams (create team_status, discover ciphers)
 func (g *Game) initStatus() error {

@@ -118,11 +118,40 @@ func (t *Team) LogCipherArrival(cipher CipherConfig) error {
 		Arrival: t.Now(),
 	}
 	t.cipherStatus[cipher.ID] = cs
-	// TODO: log previous ciphers solved?
-	// TODO: move to cipher coordinates when not using mode=online-map?
+	if err := t.tx.Insert("cipher_status", cs, nil); err != nil {
+		return err
+	}
 	log.Infof("Team '%s' (ID '%s') discovered cipher '%s'", t.teamConfig.Name, t.teamConfig.ID, cipher.ID)
 
-	return t.tx.Insert("cipher_status", cs, nil)
+	// log previous ciphers solved
+	if t.gameConfig.LogPrevSolved {
+		prevID := ""
+		if len(cipher.DependsOn) == 1 {
+			prevID = cipher.DependsOn[0]
+		} else if len(cipher.DependsOn) == 0 {
+			for _, c := range t.gameConfig.ciphers {
+				if c.ID == cipher.ID {
+					break
+				}
+				prevID = c.ID
+			}
+		}
+
+		if prevID != "" {
+			prevCipher := t.gameConfig.ciphersMap[prevID]
+			prevCipherStatus := t.cipherStatus[prevID]
+			if prevCipherStatus.Advance == nil {
+				if err := t.LogCipherAdvance(prevCipher); err != nil {
+					return err
+				}
+			}
+		} else {
+			log.Warningf("Cannot identify previous cipher to mark as solved from cipher %s", cipher.ID)
+		}
+	}
+
+	// TODO: move to cipher coordinates when not using mode=online-map?
+	return nil
 }
 
 func (t *Team) logCipher(cipher CipherConfig, action string) error {

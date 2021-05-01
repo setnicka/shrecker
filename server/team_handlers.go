@@ -199,8 +199,13 @@ func (s *Server) teamIndex(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, latErr.Error()+lonErr.Error(), http.StatusBadRequest)
 				return
 			}
-			if status.CooldownTo != nil && status.CooldownTo.After(team.Now()) {
-				s.setFlashMessage(w, r, "danger", "Nelze se přesunout, ještě do %v máte cooldown", status.CooldownTo)
+			now := team.Now()
+			if gameConfig.NotStarted(now) {
+				s.setFlashMessage(w, r, "danger", "Nelze se přesunout, hra začíná až v %s", timestampFormat(gameConfig.Start))
+			} else if gameConfig.Ended(now) {
+				s.setFlashMessage(w, r, "danger", "Nelze se přesunout, hra skončila v %s", timestampFormat(gameConfig.End))
+			} else if status.CooldownTo != nil && status.CooldownTo.After(now) {
+				s.setFlashMessage(w, r, "danger", "Nelze se přesunout, ještě máte cooldown do %s", timestampFormat(*status.CooldownTo))
 			} else {
 				if err := team.MapMoveToPosition(game.Point{Lat: lat, Lon: lon}); err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -255,13 +260,25 @@ func (s *Server) teamCalcMove(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	team, _, _ := getTeamState(r)
+	team, _, gameConfig := getTeamState(r)
 	status, err := team.GetStatus()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if status.CooldownTo != nil && status.CooldownTo.After(team.Now()) {
+
+	now := team.Now()
+	if gameConfig.NotStarted(now) {
+		render.JSON(w, r, map[string]interface{}{
+			"error": "not-started",
+			"start": timestampFormat(gameConfig.Start),
+		})
+	} else if gameConfig.Ended(now) {
+		render.JSON(w, r, map[string]interface{}{
+			"error": "ended",
+			"end":   timestampFormat(gameConfig.End),
+		})
+	} else if status.CooldownTo != nil && status.CooldownTo.After(team.Now()) {
 		render.JSON(w, r, map[string]interface{}{
 			"error":       "cooldown",
 			"cooldown_to": timestampFormat(*status.CooldownTo),

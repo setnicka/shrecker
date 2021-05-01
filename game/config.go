@@ -136,7 +136,7 @@ func (g *Game) loadConfig(globalConfig *ini.File) error {
 	}
 
 	var config Config
-	if err := gamecfg.MapTo(&config); err != nil {
+	if err := gamecfg.StrictMapTo(&config); err != nil {
 		return err
 	}
 

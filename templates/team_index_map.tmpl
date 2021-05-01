@@ -8,6 +8,7 @@
 {{ $csrf := .CSRF }}
 {{ $game := .GameConfig }}
 {{ $basedir := .Basedir }}
+{{ $enabled := not (or (.GameConfig.Ended $now) (.GameConfig.NotStarted $now)) }}
 
 <div id="panel">
 {{ template "part_messageBox" . }}
@@ -21,6 +22,9 @@
 	<ul>
 		<li>Pozice: <a href="#" onclick="map.panTo({{ .TeamStatus.Point | latlon }});">{{ .TeamStatus.Point | latlon_human }}</a></li>
 		{{ if .TeamStatus.CooldownTo }}{{ if $now.Before .TeamStatus.CooldownTo }}<li>Další pohyb bude možný v {{ .TeamStatus.CooldownTo | timestamp }}</li>{{ end }}{{ end }}
+		{{ if .GameConfig.NotStarted $now }}<li>Hra začíná v {{ .GameConfig.Start | timestamp }}</li>
+		{{- else if .GameConfig.Ended $now }}<li>Hra skončila v {{ .GameConfig.End | timestamp }}</li>
+		{{- else if .GameConfig.End }}<li>Hra končí v {{ .GameConfig.End | timestamp }}</li>{{ end }}
 	</ul>
 </div>
 
@@ -39,7 +43,7 @@
 		{{ $displayHintButton := and .Config.HintText (not .Status.Hint) (not .Status.Skip) }}
 		{{ $displaySkipButton := and .Config.SkipText (not .Status.Skip) }}
 
-		{{ if and (not .Status.Solved) (or $displayHintButton $displaySkipButton) }}
+		{{ if and $enabled (not .Status.Solved) (or $displayHintButton $displaySkipButton) }}
 		<form method="POST">
 			{{ $csrf }}
 			<input type="hidden" name="cipher" value="{{ .Config.ID }}">
@@ -131,6 +135,10 @@ map.on('click', function(e) {
 			if ("error" in data) {
 				if (data["error"] == "cooldown") {
 					popup.setContent("Ještě se nemůžete přesunout, musíte počkat do " + data["cooldown_to"]);
+				} else if (data["error"] == "not-started") {
+					popup.setContent("Hra ještě nezačala. Start je v " + data["start"]);
+				} else if (data["error"] == "ended") {
+					popup.setContent("Hra již skončila, konec byl v " + data["end"]);
 				} else {
 					popup.setContent("Jiná chyba: " + data["error"]);
 				}

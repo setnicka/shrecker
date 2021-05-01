@@ -1,6 +1,9 @@
 package game
 
-import "math"
+import (
+	"math"
+	"time"
+)
 
 const earthRadius = 6_371_000 // in metres
 
@@ -36,4 +39,14 @@ func (p *PointRadius) InRadius(pos Point) bool {
 // CouldTeamDownloadCiphers tests if game mode allows to download ciphers
 func (c *Config) CouldTeamDownloadCiphers() bool {
 	return c.Mode == GameOnlineCodes || c.Mode == GameOnlineMap
+}
+
+// NotStarted returns true if the game has set start time and it is in the future
+func (c *Config) NotStarted(now time.Time) bool {
+	return !c.Start.IsZero() && c.Start.After(now)
+}
+
+// Ended returns true if the game has set end time and it is already ended
+func (c *Config) Ended(now time.Time) bool {
+	return !c.End.IsZero() && c.End.Before(now)
 }

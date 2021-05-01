@@ -12,6 +12,12 @@
 <div id="orgomapa"></div>
 
 <main>
+<div class="pull-right" style="font-weight: bold;">
+{{ if .GameConfig.NotStarted $now }}Hra začíná v {{ .GameConfig.Start | timestamp }}
+{{- else if .GameConfig.Ended $now }}Hra skončila v {{ .GameConfig.End | timestamp }}
+{{- else if .GameConfig.End }}Hra končí v {{ .GameConfig.End | timestamp }}{{ end }}
+</div>
+
 <h2>Stav hry</h2>
 
 {{ template "part_messageBox" . }}
@@ -36,7 +42,9 @@
 		{{ range $.Ciphers }}
 			{{- $status := index $team.Ciphers .ID -}}
 			{{ if not $status.Arrival.IsZero }}
-			<td class="cipher-status {{ if $status.Solved }}status-solved{{ else if $status.Arrival }}status-arrival{{ end }}"><div class="flex">
+			<td class="cipher-status {{ if $status.Solved }}status-solved{{ else if $status.Arrival }}status-arrival{{ end }}">
+			{{- if not .NotCipher -}}
+			<div class="flex">
 				<span class="status-arrival">Příchod: {{ $status.Arrival | timestamp_hint }}</span>
 				{{ if $status.Hint }}<br><span class="status-hint">Hint: {{ $status.Hint | timestamp_hint }}</span>{{ end }}
 				{{ if $status.Skip }}<br><span class="status-skip">Skip: {{ $status.Skip | timestamp_hint }}</span>{{ end }}
@@ -45,7 +53,9 @@
 						{{- if $status.ExtraPoints }} <small>(extra: {{ $status.ExtraPoints }})</small>{{ end -}}
 					{{ end -}}
 				</span>{{ end }}
-			</div></td>
+			</div>
+			{{- end -}}
+			</td>
 			{{- else -}}
 			<td>-</td>
 			{{ end }}

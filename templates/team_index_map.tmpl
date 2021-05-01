@@ -21,6 +21,7 @@
 	<h2>Tým: {{.TeamConfig.Name}}</h2>
 	<ul>
 		<li>Pozice: <a href="#" onclick="map.panTo({{ .TeamStatus.Point | latlon }});">{{ .TeamStatus.Point | latlon_human }}</a></li>
+		{{ if eq .GameConfig.OrderMode "points" }}<li>Získané body: <b>{{ .TeamPoints }}</b></li>{{ end }}
 		{{ if .TeamStatus.CooldownTo }}{{ if $now.Before .TeamStatus.CooldownTo }}<li>Další pohyb bude možný v {{ .TeamStatus.CooldownTo | timestamp }}</li>{{ end }}{{ end }}
 		{{ if .GameConfig.NotStarted $now }}<li>Hra začíná v {{ .GameConfig.Start | timestamp }}</li>
 		{{- else if .GameConfig.Ended $now }}<li>Hra skončila v {{ .GameConfig.End | timestamp }}</li>
@@ -32,38 +33,44 @@
 <h2>Šifry</h2>
 {{ range .Ciphers}}
 	<div class="cipher {{ if .Solved }}solved{{ else if .Skip }}skip{{ end }}" id="cipher-{{ .Config.ID }}">
-		<strong>{{ if .GetTeamURL }}<a href="{{ $basedir }}{{ .GetTeamURL }}">{{ .Config.Name }}</a>{{ else }}{{ .Config.Name }}{{ end }}</strong>
+		<strong>{{ if .Config.File }}<a href="{{ $basedir }}/cipher/{{ .Config.ID }}/download">{{ .Config.Name }}</a>{{ else }}{{ .Config.Name }}{{ end }}</strong>
+		{{ if .Config.NotCipher }}{{ else }}
 		<ul>
-			<li><small>Objeveno v {{ .Status.Arrival | timestamp }}</small></li>
-			{{ if .Status.Solved }}<li><small>Vyřešeno v {{ .Status.Solved | timestamp }}</small></li>{{ end }}
-			{{ if .Status.Hint }}<li><small>Nápověda v {{ .Status.Hint | timestamp }}:</small><br><b>{{ .Config.HintText }}</b>{{ end }}
-			{{ if .Status.Skip }}<li><small>Přeskočeno v {{ .Status.Skip | timestamp }}:</small><br><b>{{ .Config.SkipText }}</b>{{ end }}
-			{{ if .Status.ExtraPoints }}<li><small>{{ if gt .Status.ExtraPoints 0 }}Extra body{{ else }}Penalizace{{ end }}:</small> <b>{{ .Status.ExtraPoints }}</b>{{ end }}
+			<li><small>Objeveno v {{ .Arrival | timestamp }}</small></li>
+			{{ if .Hint }}<li><small>Nápověda v {{ .Hint | timestamp }}:</small><br><b>{{ .Config.HintText }}</b>{{ end }}
+			{{ if .Solved }}<li><small>Vyřešeno v {{ .Solved | timestamp }}</small></li>{{ end }}
+			{{ if .Skip }}<li><small>Přeskočeno v {{ .Skip | timestamp }}:</small><br><b>{{ .Config.SkipText }}</b>{{ end }}
+			{{ if and (eq $game.OrderMode "points") .Points -}}
+				<li><small>Získané body:</small> <b>{{ .Points }}</b>
+				{{- if .ExtraPoints }}(<small>{{ if gt .ExtraPoints 0 }}Extra body{{ else }}Penalizace{{ end }}:</small> <b>{{ .ExtraPoints }}</b>){{ end -}}
+				</li>
+			{{ end }}
 		</ul>
-		{{ $displayHintButton := and .Config.HintText (not .Status.Hint) (not .Status.Skip) }}
-		{{ $displaySkipButton := and .Config.SkipText (not .Status.Skip) }}
+		{{ $displayHintButton := and .Config.HintText (not .Hint) (not .Skip) }}
+		{{ $displaySkipButton := and .Config.SkipText (not .Skip) }}
 
-		{{ if and $enabled (not .Status.Solved) (or $displayHintButton $displaySkipButton) }}
+		{{ if and $enabled (not .Solved) (or $displayHintButton $displaySkipButton) }}
 		<form method="POST">
 			{{ $csrf }}
 			<input type="hidden" name="cipher" value="{{ .Config.ID }}">
 			<div class="btn-group">
 				{{- if $displayHintButton }}
 				<input type="submit" name="hint" class="btn btn-sm btn-primary" value="Požádat o nápovědu"
-					{{- if lt ( $now.Sub .Status.Arrival ) $game.HintLimit }} disabled title="Nápovědu lze získat nejdříve {{ $game.HintLimit }} po příchodu"
+					{{- if lt ( $now.Sub .Arrival ) $game.HintLimit }} disabled title="Nápovědu lze získat nejdříve {{ $game.HintLimit }} po příchodu"
 					{{- else }} onclick="return confirm('Opravdu požádat o nápovědu k šifře {{ .Config.Name }}? Tato akce nelze vzít zpátky');"
 					{{- end -}}
 				>
 				{{- end }}
 				{{- if $displaySkipButton}}
 				<input type="submit" name="skip" class="btn btn-sm btn-danger" value="Přeskočit šifru"
-					{{- if lt ( $now.Sub .Status.Arrival ) $game.SkipLimit }} disabled title="Přeskočit šifru lze získat nejdříve {{ $game.SkipLimit }} po příchodu"
+					{{- if lt ( $now.Sub .Arrival ) $game.SkipLimit }} disabled title="Přeskočit šifru lze získat nejdříve {{ $game.SkipLimit }} po příchodu"
 					{{- else }} onclick="return confirm('Opravdu přeskočit šifru {{ .Config.Name }}? Tato akce nelze vzít zpátky');"
 					{{- end -}}
 				>
 				{{- end }}
 			</div>
 		</form>
+		{{ end }}
 		{{ end }}
 	</div>
 {{ end }}

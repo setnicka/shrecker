@@ -22,3 +22,26 @@ func (c *CipherConfig) Discoverable(pos Point, discoveredCiphers map[string]Ciph
 	}
 	return c.Position.InRadius(pos)
 }
+
+// internal function for calculating rest of fields and setting link to CipherConfig
+func (c *CipherStatus) init(gameConfig *Config) {
+	c.Points = 0
+
+	var found bool
+	if c.Config, found = gameConfig.ciphersMap[c.Cipher]; !found {
+		return
+	}
+
+	if c.Config.NotCipher {
+		return
+	} else if c.Skip != nil {
+		c.Points = gameConfig.PointsSkipped
+	} else if c.Solved != nil {
+		if c.Hint != nil {
+			c.Points = gameConfig.PointsSolvedHint
+		} else {
+			c.Points = gameConfig.PointsSolved
+		}
+		c.Points += c.ExtraPoints
+	}
+}

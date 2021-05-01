@@ -110,14 +110,11 @@ func (s *Server) teamLoginPost(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, s.basedir("login"), http.StatusSeeOther)
 }
 
-type cipherInfo struct {
-	Config game.CipherConfig
-	Status game.CipherStatus
-}
 type teamIndexData struct {
 	teamGeneralData
 	TeamStatus *game.TeamStatus
-	Ciphers    []cipherInfo
+	TeamPoints int
+	Ciphers    []game.CipherStatus
 	Locations  []game.TeamLocationEntry
 }
 
@@ -136,10 +133,11 @@ func (s *Server) teamIndex(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	ciphers := []cipherInfo{}
+	// order by cipher configuration in game but in reverse order
+	ciphers := []game.CipherStatus{}
 	for _, cipher := range gameConfig.GetCiphers() {
 		if cs, found := cipherStatus[cipher.ID]; found {
-			ciphers = append(ciphers, cipherInfo{Config: cipher, Status: cs})
+			ciphers = append([]game.CipherStatus{cs}, ciphers...)
 		}
 	}
 
@@ -185,7 +183,7 @@ func (s *Server) teamIndex(w http.ResponseWriter, r *http.Request) {
 					}
 					tx.Commit()
 
-					s.setFlashMessage(w, r, "success", "Šifra přeskočena. Umístění další šifry: %s", cipher.SkipText)
+					s.setFlashMessage(w, r, "success", "Šifra přeskočena.<br>%s", cipher.SkipText)
 				}
 			}
 		}
@@ -234,6 +232,12 @@ func (s *Server) teamIndex(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	points, err := team.SumPoints()
+	if err != nil {
+		log.Errorf("Cannot get team points: %+v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	switch gameConfig.Mode {
 	case game.GameNormal:
@@ -245,6 +249,7 @@ func (s *Server) teamIndex(w http.ResponseWriter, r *http.Request) {
 			w, "team_index_map", teamIndexData{
 				teamGeneralData: s.getTeamGeneralData("Mapa šifrovačky", w, r),
 				TeamStatus:      status,
+				TeamPoints:      points,
 				Ciphers:         ciphers,
 				Locations:       locations,
 			},

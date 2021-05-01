@@ -38,6 +38,7 @@ func (t *Team) GetCipherStatus() (map[string]CipherStatus, error) {
 		}
 		t.cipherStatus = map[string]CipherStatus{}
 		for _, cs := range cipherStatuses {
+			cs.init(t.gameConfig)
 			t.cipherStatus[cs.Cipher] = cs
 		}
 		t.cipherStatusLoaded = true
@@ -148,6 +149,9 @@ func (t *Team) LogCipherArrival(cipher CipherConfig) error {
 			for _, c := range t.gameConfig.ciphers {
 				if c.ID == cipher.ID {
 					break
+				}
+				if c.NotCipher {
+					continue
 				}
 				prevID = c.ID
 			}

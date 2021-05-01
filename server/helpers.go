@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 )
@@ -42,11 +41,4 @@ func redirectOrForbidden(w http.ResponseWriter, r *http.Request, redirectPath ..
 	} else {
 		http.Error(w, "403 Forbidden", http.StatusForbidden)
 	}
-}
-
-func (ci *cipherInfo) GetTeamURL() string {
-	if ci.Config.File == "" {
-		return ""
-	}
-	return fmt.Sprintf("/cipher/%s/download", ci.Config.ID)
 }

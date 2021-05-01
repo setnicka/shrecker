@@ -4,10 +4,10 @@ package game
 func (c *Config) GetCiphers() []CipherConfig { return c.ciphers }
 
 // GetCiphersMap returns map of ciphers by IDs
-func (c *Config) GetCiphersMap() map[string]CipherConfig { return c.ciphersMap }
+func (c *Config) GetCiphersMap() map[string]*CipherConfig { return c.ciphersMap }
 
 // GetCipher returns cipher config by ID
-func (c *Config) GetCipher(ID string) (CipherConfig, bool) {
+func (c *Config) GetCipher(ID string) (*CipherConfig, bool) {
 	cipher, found := c.ciphersMap[ID]
 	return cipher, found
 }

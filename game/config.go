@@ -150,12 +150,13 @@ func (g *Game) loadConfig(globalConfig *ini.File) error {
 		return errors.Wrapf(err, "Cannot unmarshal JSON from file '%s'", ciphersFile)
 	}
 	// create ciphers map and check that IDs are unique
-	config.ciphersMap = map[string]CipherConfig{}
+	config.ciphersMap = map[string]*CipherConfig{}
 	for _, cipher := range config.ciphers {
 		if _, found := config.ciphersMap[cipher.ID]; found {
 			return errors.Errorf("Config error: Duplicit cipher ID '%s'!", cipher.ID)
 		}
-		config.ciphersMap[cipher.ID] = cipher
+		localCipher := cipher // to avoid linking all ciphers to the config of last one :) (cipher is for loop variable)
+		config.ciphersMap[cipher.ID] = &localCipher
 	}
 	// check that cipher are unique and depends_on exists
 	codes := map[string]CipherConfig{}

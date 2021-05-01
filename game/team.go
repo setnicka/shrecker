@@ -170,7 +170,7 @@ func (t *Team) LogCipherArrival(cipher CipherConfig) error {
 	return nil
 }
 
-func (t *Team) logCipher(cipher CipherConfig, action string) error {
+func (t *Team) logCipher(cipher *CipherConfig, action string) error {
 	if _, err := t.GetCipherStatus(); err != nil {
 		return err
 	}
@@ -197,13 +197,13 @@ func (t *Team) logCipher(cipher CipherConfig, action string) error {
 }
 
 // LogCipherSolved logs solved time of the CipherStatus record in DB
-func (t *Team) LogCipherSolved(cipher CipherConfig) error { return t.logCipher(cipher, "solved") }
+func (t *Team) LogCipherSolved(cipher *CipherConfig) error { return t.logCipher(cipher, "solved") }
 
 // LogCipherHint logs hint time of the CipherStatus record in DB
-func (t *Team) LogCipherHint(cipher CipherConfig) error { return t.logCipher(cipher, "hint") }
+func (t *Team) LogCipherHint(cipher *CipherConfig) error { return t.logCipher(cipher, "hint") }
 
 // LogCipherSkip logs skip time of the CipherStatus record in DB
-func (t *Team) LogCipherSkip(cipher CipherConfig) error { return t.logCipher(cipher, "skip") }
+func (t *Team) LogCipherSkip(cipher *CipherConfig) error { return t.logCipher(cipher, "skip") }
 
 // SetCipherExtraPoints logs extra points to given CipherStatus
 func (t *Team) SetCipherExtraPoints(cipher CipherConfig, extraPoints int) error {

@@ -37,11 +37,16 @@ type Team struct {
 ////////////////////////////////////////////////////////////////////////////////
 // DB structs:
 
+// Point represent one point on map
+type Point struct {
+	Lat float64 `db:"lat" json:"lat"`
+	Lon float64 `db:"lon" json:"lon"`
+}
+
 // TeamStatus is status of the team saved in DB
 type TeamStatus struct {
-	Team       string     `db:"team"`
-	Lat        float64    `db:"lat"`
-	Lon        float64    `db:"lon"`
+	Team string `db:"team"`
+	Point
 	LastMoved  *time.Time `db:"last_moved"`
 	CooldownTo *time.Time `db:"cooldown_to"`
 }
@@ -55,12 +60,14 @@ type CipherStatus struct {
 	Hint        *time.Time `db:"hint"`
 	Skip        *time.Time `db:"skip"`
 	ExtraPoints int        `db:"extra_points"`
+	// Not in DB, calculated in Shrecker
+	Config *CipherConfig `db:"-"`
+	Points int           `db:"-"`
 }
 
 // TeamLocationEntry is one record from team_location_history table
 type TeamLocationEntry struct {
 	Team string    `db:"team"`
 	Time time.Time `db:"time"`
-	Lat  float64   `db:"lat"`
-	Lon  float64   `db:"lon"`
+	Point
 }

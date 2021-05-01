@@ -19,7 +19,7 @@
 	</form>
 	<h2>Tým: {{.TeamConfig.Name}}</h2>
 	<ul>
-		<li>Aktuální pozice: <a href="#">{{ .TeamStatus.GetPosition | latlon }}</a></li>
+		<li>Pozice: <a href="#" onclick="map.panTo({{ .TeamStatus.Point | latlon }});">{{ .TeamStatus.Point | latlon_human }}</a></li>
 		{{ if .TeamStatus.CooldownTo }}{{ if $now.Before .TeamStatus.CooldownTo }}<li>Další pohyb bude možný v {{ .TeamStatus.CooldownTo | timestamp }}</li>{{ end }}{{ end }}
 	</ul>
 </div>
@@ -71,7 +71,7 @@
 <script type="text/javascript">
 // Map:
 
-var currentPos = [{{.TeamStatus.Lat}}, {{ .TeamStatus.Lon}}]
+var currentPos = {{.TeamStatus.Point | latlon}}
 
 var map = L.map('mapa', {
 	"center": currentPos,
@@ -86,14 +86,14 @@ L.tileLayer('https://m{s}.mapserver.mapy.cz/turist-m/{z}-{x}-{y}', {
 }).addTo(map);
 
 {{ range .Ciphers }}
-	L.circle([{{ .Config.Position.Lat }}, {{ .Config.Position.Lon }}], {
+	L.circle({{ .Config.Position.Point | latlon }}, {
 		color: 'yellow',
 		fillColor: '#fbff94',
 		fillOpacity: 0.5,
 		radius: {{ .Config.Position.Radius }}
 	}).addTo(map);
 
-	L.marker([{{ .Config.Position.Lat }}, {{ .Config.Position.Lon }}], {
+	L.marker({{ .Config.Position.Point | latlon }}, {
 		title: "{{ .Config.Name }}",
 		icon: cipherIcon,
 	}).addTo(map).on('click', function() {highlightCipher({{ .Config.ID }})});
@@ -105,8 +105,8 @@ var marker = L.marker(currentPos, {
 }).addTo(map);
 
 L.polyline([
-{{- range .Locations }}[{{ .Lat }}, {{ .Lon }}], {{ end -}}
-currentPos], {color: 'yellow'}).addTo(map);
+{{- range .Locations }}{{ .Point | latlon }}, {{ end -}}
+currentPos], {color: 'blue'}).addTo(map);
 
 var lineToClick;
 

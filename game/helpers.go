@@ -29,7 +29,7 @@ func (p *Point) Distance(q Point) (distance float64) {
 }
 
 // InRadius tests if given pos is in radius of this Point
-func (p *Point) InRadius(pos Point) bool {
+func (p *PointRadius) InRadius(pos Point) bool {
 	return p.Distance(pos) <= float64(p.Radius)
 }
 

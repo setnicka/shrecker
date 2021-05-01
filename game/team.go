@@ -58,10 +58,17 @@ func (t *Team) GetLocations() ([]TeamLocationEntry, error) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// GetPosition load current team position from DB (or returns starting position if not set in DB yet)
-func (ts TeamStatus) GetPosition() Point { return Point{Lat: ts.Lat, Lon: ts.Lon} }
-
-////////////////////////////////////////////////////////////////////////////////
+// SumPoints runs through all ciphers and sum points for them
+func (t *Team) SumPoints() (int, error) {
+	if _, err := t.GetCipherStatus(); err != nil {
+		return 0, err
+	}
+	sum := 0
+	for _, c := range t.cipherStatus {
+		sum += c.Points
+	}
+	return sum, nil
+}
 
 // GetDistanceTo returns distance in metres and cooldown duration after this move
 func (t *Team) GetDistanceTo(target Point) (distance float64, cooldown time.Duration, err error) {
@@ -70,8 +77,7 @@ func (t *Team) GetDistanceTo(target Point) (distance float64, cooldown time.Dura
 		return 0, 0, err
 	}
 
-	pos := status.GetPosition()
-	distance = pos.Distance(target)
+	distance = status.Point.Distance(target)
 
 	cooldown = time.Second * time.Duration(distance/t.gameConfig.MapSpeed)
 	return distance, cooldown, nil
@@ -104,10 +110,9 @@ func (t *Team) LogPosition(pos Point) error {
 	t.status.Lon = pos.Lon
 
 	if err := t.tx.Insert("team_location_history", TeamLocationEntry{
-		Team: t.teamConfig.ID,
-		Time: now,
-		Lat:  pos.Lat,
-		Lon:  pos.Lon,
+		Team:  t.teamConfig.ID,
+		Time:  now,
+		Point: pos,
 	}, nil); err != nil {
 		return err
 	}
@@ -223,12 +228,11 @@ func (t *Team) DiscoverCiphers() ([]CipherConfig, error) {
 		return nil, err
 	}
 	discovered := []CipherConfig{}
-	pos := t.status.GetPosition()
 	for _, cipher := range t.gameConfig.ciphers {
 		if _, found := t.cipherStatus[cipher.ID]; found {
 			continue // already found
 		}
-		if cipher.StartVisible || cipher.Discoverable(pos, t.cipherStatus) {
+		if cipher.StartVisible || cipher.Discoverable(t.status.Point, t.cipherStatus) {
 			discovered = append(discovered, cipher)
 			if err := t.LogCipherArrival(cipher); err != nil {
 				return nil, err

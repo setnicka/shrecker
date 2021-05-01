@@ -51,24 +51,25 @@ type Config struct {
 	PointsSkipped    int       `ini:"points_skipped"`
 
 	ciphers    []CipherConfig
-	ciphersMap map[string]CipherConfig
+	ciphersMap map[string]*CipherConfig
 	teams      map[string]TeamConfig
 }
 
 // CipherConfig holds configuration of one cipher (parsed from JSON)
 type CipherConfig struct {
-	ID           string   `json:"id"`
-	DependsOn    []string `json:"depends_on,omitempty"` // IDs of ciphers that must be discovered before this one could be discovered (online-map mode)
-	StartVisible bool     `json:"start_visible"`        // Cipher is visible from start (online-map mode)
-	Name         string   `json:"name"`                 // Displayed name of the cipher
-	ArrivalCode  string   `json:"arrival_code"`         // code used on arrival
-	ArrivalText  string   `json:"arrival_text"`         // text displayed on the arrival
-	AdvanceCode  string   `json:"advance_code"`         // solution code deciphered from the cipher
-	AdvanceText  string   `json:"advance_text"`         // text displayed when correct advance code is entered
-	HintText     string   `json:"hint_text"`
-	SkipText     string   `json:"skip_text"`
-	Position     Point    `json:"position"`
-	File         string   `json:"file"`
+	ID           string      `json:"id"`
+	NotCipher    bool        `json:"not_cipher"`           // used for PDF with game rules, ...
+	DependsOn    []string    `json:"depends_on,omitempty"` // IDs of ciphers that must be discovered before this one could be discovered (online-map mode)
+	StartVisible bool        `json:"start_visible"`        // Cipher is visible from start (online-map mode)
+	Name         string      `json:"name"`                 // Displayed name of the cipher
+	ArrivalCode  string      `json:"arrival_code"`         // code used on arrival
+	ArrivalText  string      `json:"arrival_text"`         // text displayed on the arrival
+	AdvanceCode  string      `json:"advance_code"`         // solution code deciphered from the cipher
+	AdvanceText  string      `json:"advance_text"`         // text displayed when correct advance code is entered
+	HintText     string      `json:"hint_text"`
+	SkipText     string      `json:"skip_text"`
+	Position     PointRadius `json:"position"`
+	File         string      `json:"file"`
 	// Messages    map[string]cipherMessage `json:messages`
 }
 
@@ -80,11 +81,10 @@ type TeamConfig struct {
 	Password string `json:"password"`
 }
 
-// Point represent one point on map (with optional radius)
-type Point struct {
-	Lat    float64 `json:"lat"`
-	Lon    float64 `json:"lon"`
-	Radius int     `json:"radius,omitempty"` // in meters
+// PointRadius represent one point on map with radius
+type PointRadius struct {
+	Point
+	Radius int `json:"radius,omitempty"` // in meters
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,8 +106,10 @@ func (g *Game) initStatus() error {
 			log.Printf("Creating team status record for team '%s' with ID '%s'", teamConfig.Name, teamConfig.ID)
 			err = tx.Insert("team_status", TeamStatus{
 				Team: teamConfig.ID,
-				Lat:  config.StartLat,
-				Lon:  config.StartLon,
+				Point: Point{
+					Lat: config.StartLat,
+					Lon: config.StartLon,
+				},
 			}, nil)
 			if err == nil && config.Mode == GameOnlineMap {
 				// Add initial team position

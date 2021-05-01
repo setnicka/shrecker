@@ -78,20 +78,20 @@ L.tileLayer('https://m{s}.mapserver.mapy.cz/turist-m/{z}-{x}-{y}', {
 }).addTo(map);
 
 {{ range .Ciphers }}
-	L.circle([{{ .Position.Lat }}, {{ .Position.Lon }}], {
+	L.circle({{ .Position.Point | latlon }}, {
 		color: 'yellow',
 		fillColor: '#fbff94',
 		fillOpacity: 0.5,
 		radius: {{ .Position.Radius }}
 	}).addTo(map);
 
-	L.marker([{{ .Position.Lat }}, {{ .Position.Lon }}], {
+	L.marker({{ .Position.Point | latlon }}, {
 		title: "{{ .Name }}",
 		icon: cipherIcon,
 	}).addTo(map).on('click', function() {highlightCipher("{{ .ID }}")});
 {{ end }}
 {{ range .Teams }}
-	L.marker([{{ .Status.Lat }}, {{ .Status.Lon }}], {
+	L.marker({{ .Status.Point | latlon }}, {
 		title: "{{ .Config.Name }}",
 		icon: teamIcon,
 	}).addTo(map).on('click', function() {highlightTeam("{{ .Config.ID }}")});

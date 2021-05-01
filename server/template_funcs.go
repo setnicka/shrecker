@@ -49,7 +49,10 @@ var (
 			ts, ds := timestampGeneric(t, time.Now())
 			return template.HTML(fmt.Sprintf("<span class='hint' data-countdown-title='%s' title='%s'>%s</span>", t.Format("2006-01-02 15:04:05"), ds, ts))
 		},
-		"latlon": func(p game.Point) string {
+		"latlon": func(p game.Point) template.JS {
+			return template.JS(fmt.Sprintf("[%f, %f]", p.Lat, p.Lon))
+		},
+		"latlon_human": func(p game.Point) string {
 			latL := 'N'
 			if p.Lat < 0 {
 				latL = 'S'

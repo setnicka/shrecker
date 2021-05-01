@@ -44,7 +44,8 @@ func timestampFormat(t time.Time) template.HTML {
 
 var (
 	templateFuncs = template.FuncMap{
-		"timestamp": timestampFormat,
+		"timestamp_js": func(t time.Time) string { return t.Format("2006-01-02 15:04:05") },
+		"timestamp":    timestampFormat,
 		"timestamp_hint": func(t time.Time) template.HTML {
 			ts, ds := timestampGeneric(t, time.Now())
 			return template.HTML(fmt.Sprintf("<span class='hint' data-countdown-title='%s' title='%s'>%s</span>", t.Format("2006-01-02 15:04:05"), ds, ts))

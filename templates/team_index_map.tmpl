@@ -56,17 +56,13 @@
 			<div class="btn-group">
 				{{- if $displayHintButton }}
 				<input type="submit" name="hint" class="btn btn-sm btn-primary" value="Požádat o nápovědu"
-					{{- if lt ( $now.Sub .Arrival ) $game.HintLimit }} disabled title="Nápovědu lze získat nejdříve {{ $game.HintLimit }} po příchodu"
-					{{- else }} onclick="return confirm('Opravdu požádat o nápovědu k šifře {{ .Config.Name }}? Tato akce nelze vzít zpátky');"
-					{{- end -}}
-				>
+					{{- if lt ( $now.Sub .Arrival ) $game.HintLimit }} disabled title="Nápovědu lze získat nejdříve {{ $game.HintLimit }} po příchodu" data-countdown-disabled="{{ .Arrival.Add $game.HintLimit | timestamp_js }}"
+					{{- end -}} onclick="return confirm('Opravdu požádat o nápovědu k šifře {{ .Config.Name }}? Tato akce nelze vzít zpátky');">
 				{{- end }}
 				{{- if $displaySkipButton}}
 				<input type="submit" name="skip" class="btn btn-sm btn-danger" value="Přeskočit šifru"
-					{{- if lt ( $now.Sub .Arrival ) $game.SkipLimit }} disabled title="Přeskočit šifru lze získat nejdříve {{ $game.SkipLimit }} po příchodu"
-					{{- else }} onclick="return confirm('Opravdu přeskočit šifru {{ .Config.Name }}? Tato akce nelze vzít zpátky');"
-					{{- end -}}
-				>
+					{{- if lt ( $now.Sub .Arrival ) $game.SkipLimit }} disabled title="Přeskočit šifru lze získat nejdříve {{ $game.SkipLimit }} po příchodu" data-countdown-disabled="{{ .Arrival.Add $game.SkipLimit | timestamp_js }}"
+					{{- end -}} onclick="return confirm('Opravdu přeskočit šifru {{ .Config.Name }}? Tato akce nelze vzít zpátky');">
 				{{- end }}
 			</div>
 		</form>

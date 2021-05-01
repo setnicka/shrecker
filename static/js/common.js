@@ -70,4 +70,12 @@ $(function(){
 		var now = Date.now();
 		$this.prop('title', getCountdownText(finalDate, now));
 	});
+	$('[data-countdown-disabled]').each(function() {
+		var $this = $(this)
+		var finalDate = Date.parse($this.data('countdown-disabled'));
+		var now = Date.now();
+		setTimeout(function() {
+			$this.prop('disabled', false).prop('title', '');
+		}, finalDate - now);
+	});
 });

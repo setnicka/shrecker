@@ -36,9 +36,13 @@ table#dashboard thead tr {
 
 td.cipher-status.status-arrival { background-color: #dbc926; }
 td.cipher-status.status-solved { background-color: #669900; }
-td.cipher-status span {
-	margin: 2px 0px;
-	padding: 2px;
+td.cipher-status .flex {
+	display: flex;
+	flex-direction: column;
+}
+td.cipher-status .flex > span {
+	margin: 2px 5px;
+	display: block;
 }
 td.cipher-status span.status-solved { background-color: #05C100; }
 td.cipher-status span.status-hint { background-color: yellow; }

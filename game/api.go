@@ -57,7 +57,7 @@ func (g *Game) LoginTeam(login, password string) (*Team, *Config, error) {
 // GetAll returns all teams, game config and DB transaction,
 // which is used for all changes on the Teams. Changes must be committed by
 // Commit call on the transaction.
-func (g *Game) GetAll(ctx context.Context, loadStatus bool, loadCiphers bool) (map[string]*Team, *sqlxpp.Tx, *Config, error) {
+func (g *Game) GetAll(ctx context.Context, loadStatus, loadCiphers, loadLocations bool) (map[string]*Team, *sqlxpp.Tx, *Config, error) {
 	gameConfig := g.GetConfig()
 	tx, err := g.db.BeginCtx(ctx)
 	now := time.Now()
@@ -96,8 +96,23 @@ func (g *Game) GetAll(ctx context.Context, loadStatus bool, loadCiphers bool) (m
 			return nil, nil, nil, err
 		}
 		for _, cs := range cipherStatuses {
+			cs.init(&gameConfig)
 			teams[cs.Team].cipherStatus[cs.Cipher] = cs
 			teams[cs.Team].cipherStatusLoaded = true
+		}
+	}
+	if loadLocations {
+		locationEntries := []TeamLocationEntry{}
+		query, args, err := sqlx.In("SELECT * FROM team_location_history WHERE team IN (?) ORDER BY time", teamIDs)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		if err := tx.SelectE(&locationEntries, tx.Rebind(query), args...); err != nil {
+			return nil, nil, nil, err
+		}
+		for _, entry := range locationEntries {
+			teams[entry.Team].locations = append(teams[entry.Team].locations, entry)
+			teams[entry.Team].locationsLoaded = true
 		}
 	}
 

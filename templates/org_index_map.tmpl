@@ -7,6 +7,7 @@
 
 {{ $now := .Now }}
 {{ $basedir := .Basedir }}
+{{ $game := .GameConfig }}
 
 <div id="orgomapa"></div>
 
@@ -18,32 +19,38 @@
 <table id="dashboard">
 	<thead class="thead-light"><tr>
 		<th>Tým</th>
-		{{ range .Ciphers }}
+		{{- range .Ciphers -}}
 		<th>
 			{{ if .File }}<a href="{{ $basedir }}/org/cipher/{{ .ID }}/download">{{ .Name }}</a>{{ else }}{{ .Name }}{{ end }}
-			{{ if .HintText }}<span class="hint" title="{{ .HintText }}">[hint]</span>{{ end }}
-			{{ if .SkipText }}<span class="hint" title="{{ .SkipText }}">[skip]</span>{{ end }}
+			{{- if .HintText }}<span class="hint" title="{{ .HintText }}">[hint]</span>{{ end }}
+			{{- if .SkipText }}<span class="hint" title="{{ .SkipText }}">[skip]</span>{{ end }}
 		</th>
-		{{ end }}
+		{{- end }}
 	</tr></thead>
 	{{ range .Teams }}
-		<tr>
-		<th>{{ .Config.Name }}</th>
-		{{ $team := . }}
+	<tr>
+		<th><a href="#" onclick="showPath('{{ .Config.ID }}'); return false;">{{ .Config.Name }}</a>
+			{{- if eq $game.OrderMode "points" }}<br>Bodů: {{ .Points }}{{ end -}}
+		</th>
+		{{- $team := . -}}
 		{{ range $.Ciphers }}
-			{{ $status := index $team.Ciphers .ID }}
+			{{- $status := index $team.Ciphers .ID -}}
 			{{ if not $status.Arrival.IsZero }}
-			<td class="cipher-status {{ if $status.Solved }}status-solved{{ else if $status.Arrival }}status-arrival{{ end }}">
-				{{ $status.Arrival | timestamp_hint }}
-				{{ if $status.Solved }}<br><span class="status-solved">Postup: {{ $status.Solved | timestamp_hint }}</span>{{ end }}
+			<td class="cipher-status {{ if $status.Solved }}status-solved{{ else if $status.Arrival }}status-arrival{{ end }}"><div class="flex">
+				<span class="status-arrival">Příchod: {{ $status.Arrival | timestamp_hint }}</span>
 				{{ if $status.Hint }}<br><span class="status-hint">Hint: {{ $status.Hint | timestamp_hint }}</span>{{ end }}
 				{{ if $status.Skip }}<br><span class="status-skip">Skip: {{ $status.Skip | timestamp_hint }}</span>{{ end }}
-				{{ if $status.ExtraPoints }}<br><span class="extra_points">{{ $status.ExtraPoints }}</span>{{ end }}
-			</td>
-			{{ else }}
+				{{ if $status.Solved }}<br><span class="status-solved">Postup: {{ $status.Solved | timestamp_hint }}
+					{{- if eq $game.OrderMode "points" }}<br>Bodů: <b>{{ $status.Points }}</b>
+						{{- if $status.ExtraPoints }} <small>(extra: {{ $status.ExtraPoints }})</small>{{ end -}}
+					{{ end -}}
+				</span>{{ end }}
+			</div></td>
+			{{- else -}}
 			<td>-</td>
 			{{ end }}
-		{{ end }}
+		{{- end }}
+	</tr>
 	{{ end }}
 </table>
 
@@ -51,8 +58,10 @@
 	<h2>Týmy</h2>
 	{{ range .Teams}}
 		<div class="team" id="team-{{ .Config.ID }}">
-			<strong>{{ .Config.Name }}</strong> (ID: <code>{{ .Config.ID }}</code>, login: <code>{{ .Config.Login }}</code>)
+			<a href="#" onclick="showPath('{{ .Config.ID }}'); return false;"><strong>{{ .Config.Name }}</strong></a>
+			(ID: <code>{{ .Config.ID }}</code>, login: <code>{{ .Config.Login }}</code>)
 			<ul>
+				{{ if eq $game.OrderMode "points" }}<li>Získané body: <b>{{ .Points }}</b></li>{{ end }}
 				<li>Poslední pohyb: {{ .Status.LastMoved | timestamp }}</li>
 				<li>Cooldown: {{ if .Status.CooldownTo }}{{ if $now.Before .Status.CooldownTo }}{{ .Status.CooldownTo | timestamp }}{{ end }}{{ end }}</li>
 			</ul>
@@ -64,7 +73,6 @@
 
 <script type="text/javascript">
 // Map:
-
 var map = L.map('orgomapa', {
 	"center": [{{.GameConfig.StartLat}}, {{ .GameConfig.StartLon}}],
 	"zoom": {{ .GameConfig.MapDefaultZoom }}, "minZoom": 6, "maxZoom": 18,
@@ -90,12 +98,36 @@ L.tileLayer('https://m{s}.mapserver.mapy.cz/turist-m/{z}-{x}-{y}', {
 		icon: cipherIcon,
 	}).addTo(map).on('click', function() {highlightCipher("{{ .ID }}")});
 {{ end }}
+
+var displayedPath;
+function showPath(id) {
+	if (displayedPath) displayedPath.remove();
+	$("#orgomapa").scrollintoview();
+	map.panTo(team_positions[id]);
+	displayedPath = team_paths[id];
+	displayedPath.addTo(map);
+}
+
+var team_markers = [];
+var team_positions = [];
+var team_paths = [];
 {{ range .Teams }}
-	L.marker({{ .Status.Point | latlon }}, {
+	team_positions[{{ .Config.ID }}] = {{ .Status.Point | latlon }};
+	team_markers[{{ .Config.ID }}] = L.marker({{ .Status.Point | latlon }}, {
 		title: "{{ .Config.Name }}",
 		icon: teamIcon,
-	}).addTo(map).on('click', function() {highlightTeam("{{ .Config.ID }}")});
+	}).bindPopup("Tým {{ .Config.Name }}").addTo(map).on('click', function() {
+		displayedPath = team_paths["{{ .Config.ID }}"];
+		displayedPath.addTo(map);
+	});
+	team_paths[{{ .Config.ID }}] = L.polyline([{{- range .Locations }}{{ .Point | latlon }}, {{ end -}}], {color: 'blue'});
+
 {{ end}}
+
+map.on('popupclose', function(e) {
+	if (displayedPath) displayedPath.remove();
+});
+
 </script>
 
 </body>

@@ -49,7 +49,7 @@ func (t *Team) GetCipherStatus() (map[string]CipherStatus, error) {
 // GetLocations loads location history of this team from DB (or returns cached one)
 func (t *Team) GetLocations() ([]TeamLocationEntry, error) {
 	if !t.locationsLoaded {
-		if err := t.tx.SelectE(&t.locations, "SELECT * FROM team_location_history WHERE team=$1", t.teamConfig.ID); err != nil {
+		if err := t.tx.SelectE(&t.locations, "SELECT * FROM team_location_history WHERE team=$1 ORDER BY time", t.teamConfig.ID); err != nil {
 			return nil, err
 		}
 		t.locationsLoaded = true

@@ -64,24 +64,31 @@ type orgIndexData struct {
 }
 
 type teamInfo struct {
-	Config  *game.TeamConfig
-	Status  *game.TeamStatus
-	Ciphers map[string]game.CipherStatus
+	Config    *game.TeamConfig
+	Status    *game.TeamStatus
+	Points    int
+	Locations []game.TeamLocationEntry
+	Ciphers   map[string]game.CipherStatus
 }
 
 func (s *Server) orgIndex(w http.ResponseWriter, r *http.Request) {
-	teams, _, gameConfig, err := s.game.GetAll(r.Context(), true, true)
+	teams, _, gameConfig, err := s.game.GetAll(r.Context(), true, true, true)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	teamInfos := []teamInfo{}
 	for _, team := range teams {
-		status, _ := team.GetStatus()        // is preloaded by GetAll, no err possible
-		ciphers, _ := team.GetCipherStatus() // is preloaded by GetAll, no err possible
+		// everything is preloaded by GetAll, no err possible, no need to check
+		status, _ := team.GetStatus()
+		ciphers, _ := team.GetCipherStatus()
+		locations, _ := team.GetLocations()
+		points, _ := team.SumPoints()
 		teamInfos = append(teamInfos, teamInfo{
-			Config:  team.GetConfig(),
-			Status:  status,
-			Ciphers: ciphers,
+			Config:    team.GetConfig(),
+			Status:    status,
+			Points:    points,
+			Locations: locations,
+			Ciphers:   ciphers,
 		})
 	}
 	sort.Slice(teamInfos, func(i, j int) bool {

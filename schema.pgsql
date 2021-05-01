@@ -16,7 +16,7 @@ CREATE TABLE cipher_status (
 	cipher		text		NOT NULL,
 	team		text		NOT NULL,
 	arrival		timestamptz	NOT NULL,
-	advance		timestamptz	DEFAULT NULL,
+	solved		timestamptz	DEFAULT NULL,
 	hint		timestamptz	DEFAULT NULL,
 	skip		timestamptz	DEFAULT NULL,
 	extra_points	int		DEFAULT 0,

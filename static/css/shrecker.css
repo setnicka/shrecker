@@ -107,8 +107,11 @@ h2 {
 	padding: 3px 5px;
 	margin-bottom: 2px;
 }
-#cipher-list .cipher.advance {
+#cipher-list .cipher.solved {
 	background-color: rgb(169, 241, 169);
+}
+#cipher-list .cipher.skip {
+	background-color: rgb(255, 193, 193);
 }
 #cipher-list .cipher.highlight {
 	background-color: rgb(238, 238, 187);

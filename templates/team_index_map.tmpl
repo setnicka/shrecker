@@ -27,11 +27,11 @@
 <div id="cipher-list">
 <h2>Šifry</h2>
 {{ range .Ciphers}}
-	<div class="cipher {{ if .Status.Advance }}advance{{ end }}" id="cipher-{{ .Config.ID }}">
+	<div class="cipher {{ if .Solved }}solved{{ else if .Skip }}skip{{ end }}" id="cipher-{{ .Config.ID }}">
 		<strong>{{ if .GetTeamURL }}<a href="{{ $basedir }}{{ .GetTeamURL }}">{{ .Config.Name }}</a>{{ else }}{{ .Config.Name }}{{ end }}</strong>
 		<ul>
 			<li><small>Objeveno v {{ .Status.Arrival | timestamp }}</small></li>
-			{{ if .Status.Advance }}<li><small>Vyřešeno v {{ .Status.Advance | timestamp }}</small></li>{{ end }}
+			{{ if .Status.Solved }}<li><small>Vyřešeno v {{ .Status.Solved | timestamp }}</small></li>{{ end }}
 			{{ if .Status.Hint }}<li><small>Nápověda v {{ .Status.Hint | timestamp }}:</small><br><b>{{ .Config.HintText }}</b>{{ end }}
 			{{ if .Status.Skip }}<li><small>Přeskočeno v {{ .Status.Skip | timestamp }}:</small><br><b>{{ .Config.SkipText }}</b>{{ end }}
 			{{ if .Status.ExtraPoints }}<li><small>{{ if gt .Status.ExtraPoints 0 }}Extra body{{ else }}Penalizace{{ end }}:</small> <b>{{ .Status.ExtraPoints }}</b>{{ end }}
@@ -39,7 +39,7 @@
 		{{ $displayHintButton := and .Config.HintText (not .Status.Hint) (not .Status.Skip) }}
 		{{ $displaySkipButton := and .Config.SkipText (not .Status.Skip) }}
 
-		{{ if and (not .Status.Advance) (or $displayHintButton $displaySkipButton) }}
+		{{ if and (not .Status.Solved) (or $displayHintButton $displaySkipButton) }}
 		<form method="POST">
 			{{ $csrf }}
 			<input type="hidden" name="cipher" value="{{ .Config.ID }}">

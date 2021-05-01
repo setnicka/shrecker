@@ -51,7 +51,7 @@ type CipherStatus struct {
 	Team        string     `db:"team"`
 	Cipher      string     `db:"cipher"`
 	Arrival     time.Time  `db:"arrival"`
-	Advance     *time.Time `db:"advance"`
+	Solved      *time.Time `db:"solved"`
 	Hint        *time.Time `db:"hint"`
 	Skip        *time.Time `db:"skip"`
 	ExtraPoints int        `db:"extra_points"`

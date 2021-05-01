@@ -151,8 +151,8 @@ func (t *Team) LogCipherArrival(cipher CipherConfig) error {
 		if prevID != "" {
 			prevCipher := t.gameConfig.ciphersMap[prevID]
 			prevCipherStatus := t.cipherStatus[prevID]
-			if prevCipherStatus.Advance == nil {
-				if err := t.LogCipherAdvance(prevCipher); err != nil {
+			if prevCipherStatus.Solved == nil && prevCipherStatus.Skip == nil {
+				if err := t.LogCipherSolved(prevCipher); err != nil {
 					return err
 				}
 			}
@@ -174,9 +174,9 @@ func (t *Team) logCipher(cipher CipherConfig, action string) error {
 		return errors.Errorf("Cannot %s on not arrived cipher", action)
 	}
 	field, found := map[string]**time.Time{
-		"advance": &cs.Advance,
-		"hint":    &cs.Hint,
-		"skip":    &cs.Skip,
+		"solved": &cs.Solved,
+		"hint":   &cs.Hint,
+		"skip":   &cs.Skip,
 	}[action]
 	if !found {
 		return errors.Errorf("Unknown action '%s'", action)
@@ -191,8 +191,8 @@ func (t *Team) logCipher(cipher CipherConfig, action string) error {
 	return t.tx.Update("cipher_status", cs, "WHERE team=:team AND cipher=:cipher", []string{"team", "cipher"})
 }
 
-// LogCipherAdvance logs advance time of the CipherStatus record in DB
-func (t *Team) LogCipherAdvance(cipher CipherConfig) error { return t.logCipher(cipher, "advance") }
+// LogCipherSolved logs solved time of the CipherStatus record in DB
+func (t *Team) LogCipherSolved(cipher CipherConfig) error { return t.logCipher(cipher, "solved") }
 
 // LogCipherHint logs hint time of the CipherStatus record in DB
 func (t *Team) LogCipherHint(cipher CipherConfig) error { return t.logCipher(cipher, "hint") }

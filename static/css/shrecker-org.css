@@ -34,17 +34,12 @@ table#dashboard thead tr {
 #sifrovacka_prehled tr.licha { background-color: white; }
 #sifrovacka_prehled tr.nadpis { background-color: black; color: white; }
 
-#sifrovacka_prehled span.napoveda { background-color: orange; font-size: 12px; }
-#sifrovacka_prehled span.preskok { background-color: red; font-size: 12px; color: white; }
-#sifrovacka_prehled span.postup { background-color: #05C100; font-size: 12px; }
-
-
 td.cipher-status.status-arrival { background-color: #dbc926; }
-td.cipher-status.status-advance { background-color: #669900; }
+td.cipher-status.status-solved { background-color: #669900; }
 td.cipher-status span {
 	margin: 2px 0px;
 	padding: 2px;
 }
-td.cipher-status span.status-advance { background-color: #05C100; }
+td.cipher-status span.status-solved { background-color: #05C100; }
 td.cipher-status span.status-hint { background-color: yellow; }
 td.cipher-status span.status-skip { background-color: rgb(255, 98, 98); }

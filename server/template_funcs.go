@@ -34,21 +34,21 @@ func timestampGeneric(t time.Time, now time.Time) (string, string) {
 		outD = fmt.Sprintf("%s %dm %ds", word, m, int(d.Seconds())-m*60)
 	}
 
-	return t.Format(formatString), outD
+	return t.Local().Format(formatString), outD
 }
 
 func timestampFormat(t time.Time) template.HTML {
 	ts, ds := timestampGeneric(t, time.Now())
-	return template.HTML(fmt.Sprintf("%s (<span data-countdown='%s'>%s</span>)", ts, t.Format("2006-01-02 15:04:05"), ds))
+	return template.HTML(fmt.Sprintf("%s (<span data-countdown='%s'>%s</span>)", ts, t.Local().Format("2006-01-02 15:04:05"), ds))
 }
 
 var (
 	templateFuncs = template.FuncMap{
-		"timestamp_js": func(t time.Time) string { return t.Format("2006-01-02 15:04:05") },
+		"timestamp_js": func(t time.Time) string { return t.Local().Format("2006-01-02 15:04:05") },
 		"timestamp":    timestampFormat,
 		"timestamp_hint": func(t time.Time) template.HTML {
 			ts, ds := timestampGeneric(t, time.Now())
-			return template.HTML(fmt.Sprintf("<span class='hint' data-countdown-title='%s' title='%s'>%s</span>", t.Format("2006-01-02 15:04:05"), ds, ts))
+			return template.HTML(fmt.Sprintf("<span class='hint' data-countdown-title='%s' title='%s'>%s</span>", t.Local().Format("2006-01-02 15:04:05"), ds, ts))
 		},
 		"latlon": func(p game.Point) template.JS {
 			return template.JS(fmt.Sprintf("[%f, %f]", p.Lat, p.Lon))

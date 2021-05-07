@@ -96,7 +96,7 @@ func (s *Server) Start() error {
 	// Org api - fail on unauthorized
 	r.Route("/org/api", func(r chi.Router) {
 		r.Use(s.orgAuth())
-		// TODO
+		r.Get("/hash", s.orgGameHash)
 	})
 
 	// Org pages - redirect on unauthorized
@@ -110,6 +110,7 @@ func (s *Server) Start() error {
 	// Team api - fail on unauthorized
 	r.Route("/api", func(r chi.Router) {
 		r.Use(s.teamAuth())
+		r.Get("/hash", s.teamHash)
 		r.Get("/calc-move", s.teamCalcMove)
 	})
 

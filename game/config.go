@@ -3,6 +3,7 @@ package game
 import (
 	"encoding/json"
 	"io/ioutil"
+	"math/rand"
 	"time"
 
 	"github.com/coreos/go-log/log"
@@ -53,6 +54,7 @@ type Config struct {
 	ciphers    []CipherConfig
 	ciphersMap map[string]*CipherConfig
 	teams      map[string]TeamConfig
+	teamHash   map[string]int // changed everytime when something for the team changes
 }
 
 // CipherConfig holds configuration of one cipher (parsed from JSON)
@@ -196,11 +198,13 @@ func (g *Game) loadConfig(globalConfig *ini.File) error {
 	}
 	// create teams map and check that IDs are unique
 	config.teams = map[string]TeamConfig{}
+	config.teamHash = map[string]int{}
 	for _, team := range teamConfigs {
 		if _, found := config.teams[team.ID]; found {
 			return errors.Errorf("Config error: Duplicit team ID '%s'!", team.ID)
 		}
 		config.teams[team.ID] = team
+		config.teamHash[team.ID] = rand.Int() // init with random hash to let know if something with the team changed
 	}
 
 	// Store config

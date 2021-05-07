@@ -139,6 +139,19 @@ map.on('popupclose', function(e) {
 	if (displayedPath) displayedPath.remove();
 });
 
+// Hloupá pravidelná kontrola, jestli se něco změnilo
+setInterval(function() {
+	$.ajax({
+		url: '{{ .Basedir }}/org/api/hash',
+		type: 'GET',
+		success: function (data) {
+			if (data != '{{ .GameHash }}') {
+				window.location.reload();
+			}
+		}
+	});
+}, 10_000);
+
 </script>
 
 </body>

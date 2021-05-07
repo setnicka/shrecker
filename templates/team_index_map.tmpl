@@ -161,6 +161,19 @@ map.on('click', function(e) {
 	if (lineToClick) lineToClick.remove();
 });
 
+// Hloupá pravidelná kontrola, jestli se něco změnilo
+setInterval(function() {
+	$.ajax({
+		url: '{{ .Basedir }}/api/hash',
+		type: 'GET',
+		success: function (data) {
+			if (data != '{{ .TeamHash }}') {
+				window.location.reload();
+			}
+		}
+	});
+}, 10_000);
+
 </script>
 
 </body>

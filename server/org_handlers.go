@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"path"
 	"sort"
+	"strconv"
 
 	"github.com/go-chi/chi"
 	"github.com/setnicka/shrecker/game"
@@ -56,9 +57,15 @@ func (s *Server) orgLoginPost(w http.ResponseWriter, r *http.Request) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+func (s *Server) orgGameHash(w http.ResponseWriter, r *http.Request) {
+	config := s.game.GetConfig()
+	w.Write([]byte(strconv.Itoa(config.GetGameHash())))
+}
+
 type orgIndexData struct {
 	GeneralData
 	GameConfig *game.Config
+	GameHash   int
 	Teams      []teamInfo
 	Ciphers    []game.CipherConfig
 }
@@ -105,6 +112,7 @@ func (s *Server) orgIndex(w http.ResponseWriter, r *http.Request) {
 			w, "org_index_map", orgIndexData{
 				GeneralData: s.getGeneralData("Orgovský přehled", w, r),
 				GameConfig:  gameConfig,
+				GameHash:    gameConfig.GetGameHash(),
 				Teams:       teamInfos,
 				Ciphers:     gameConfig.GetCiphers(),
 			},

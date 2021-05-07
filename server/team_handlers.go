@@ -114,8 +114,14 @@ type teamIndexData struct {
 	teamGeneralData
 	TeamStatus *game.TeamStatus
 	TeamPoints int
+	TeamHash   int
 	Ciphers    []game.CipherStatus
 	Locations  []game.TeamLocationEntry
+}
+
+func (s *Server) teamHash(w http.ResponseWriter, r *http.Request) {
+	team, _, _ := getTeamState(r)
+	w.Write([]byte(strconv.Itoa(team.GetHash())))
 }
 
 func (s *Server) teamIndex(w http.ResponseWriter, r *http.Request) {
@@ -250,6 +256,7 @@ func (s *Server) teamIndex(w http.ResponseWriter, r *http.Request) {
 				teamGeneralData: s.getTeamGeneralData("Mapa šifrovačky", w, r),
 				TeamStatus:      status,
 				TeamPoints:      points,
+				TeamHash:        team.GetHash(),
 				Ciphers:         ciphers,
 				Locations:       locations,
 			},

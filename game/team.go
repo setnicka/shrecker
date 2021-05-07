@@ -18,6 +18,9 @@ func (t *Team) Now() time.Time {
 // GetConfig returns team config
 func (t *Team) GetConfig() *TeamConfig { return &t.teamConfig }
 
+// GetHash returns current hash representing state of the team
+func (t *Team) GetHash() int { return t.gameConfig.teamHash[t.teamConfig.ID] }
+
 // GetStatus load team status from the DB (or returns cached one)
 func (t *Team) GetStatus() (*TeamStatus, error) {
 	if !t.statusLoaded {
@@ -84,6 +87,9 @@ func (t *Team) GetDistanceTo(target Point) (distance float64, cooldown time.Dura
 	return distance, cooldown, nil
 }
 
+// increase hash to mark that something with the team changes
+func (t *Team) incHash() { t.gameConfig.teamHash[t.teamConfig.ID]++ }
+
 // MapMoveToPosition is used in online map mode and checks cooldown. It internally
 // calls LogPosition
 func (t *Team) MapMoveToPosition(target Point) error {
@@ -97,7 +103,7 @@ func (t *Team) MapMoveToPosition(target Point) error {
 	cooldownTo := t.Now().Add(cooldown)
 	t.status.CooldownTo = &cooldownTo
 
-	return t.LogPosition(target)
+	return t.LogPosition(target) // incHash is inside LogPosition
 }
 
 // LogPosition saves position to team status and logs it into team_location_history
@@ -118,6 +124,7 @@ func (t *Team) LogPosition(pos Point) error {
 		return err
 	}
 	log.Infof("Team '%s' (ID '%s') moved to new position %v", t.teamConfig.Name, t.teamConfig.ID, pos)
+	t.incHash()
 	return t.tx.Update("team_status", t.status, "WHERE team=:team", nil)
 }
 
@@ -139,6 +146,7 @@ func (t *Team) LogCipherArrival(cipher CipherConfig) error {
 		return err
 	}
 	log.Infof("Team '%s' (ID '%s') discovered cipher '%s'", t.teamConfig.Name, t.teamConfig.ID, cipher.ID)
+	t.incHash()
 
 	// log previous ciphers solved
 	if t.gameConfig.LogPrevSolved {
@@ -197,6 +205,7 @@ func (t *Team) logCipher(cipher *CipherConfig, action string) error {
 	*field = &now
 	t.cipherStatus[cipher.ID] = cs
 	log.Infof("Team '%s' (ID '%s'): %s on cipher '%s'", t.teamConfig.Name, t.teamConfig.ID, action, cipher.ID)
+	t.incHash()
 	return t.tx.Update("cipher_status", cs, "WHERE team=:team AND cipher=:cipher", []string{"team", "cipher"})
 }
 
@@ -220,6 +229,7 @@ func (t *Team) SetCipherExtraPoints(cipher CipherConfig, extraPoints int) error 
 	}
 	cs.ExtraPoints = extraPoints
 	t.cipherStatus[cipher.ID] = cs
+	t.incHash()
 	return t.tx.Update("cipher_status", cs, "WHERE team=:team AND cipher=:cipher", []string{"team", "cipher"})
 }
 

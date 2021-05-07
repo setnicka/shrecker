@@ -50,3 +50,12 @@ func (c *Config) NotStarted(now time.Time) bool {
 func (c *Config) Ended(now time.Time) bool {
 	return !c.End.IsZero() && c.End.Before(now)
 }
+
+// GetGameHash returns combined hash of all teams (changed on every change)
+func (c *Config) GetGameHash() int {
+	hash := 0
+	for _, h := range c.teamHash {
+		hash += h
+	}
+	return hash
+}

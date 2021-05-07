@@ -21,6 +21,7 @@
 	<h2>Tým: {{.TeamConfig.Name}}</h2>
 	<ul>
 		<li>Pozice: <a href="#" onclick="map.panTo({{ .TeamStatus.Point | latlon }});">{{ .TeamStatus.Point | latlon_human }}</a></li>
+		{{ if .TeamConfig.Jitsi }}<li>Jitsi meeting: <a target="_blank" href="https://meet.jit.si/{{ .TeamConfig.Jitsi }}"><code>{{ .TeamConfig.Jitsi }}</code></a></li>{{ end }}
 		{{ if eq .GameConfig.OrderMode "points" }}<li>Získané body: <b>{{ .TeamPoints }}</b></li>{{ end }}
 		{{ if .TeamStatus.CooldownTo }}{{ if $now.Before .TeamStatus.CooldownTo }}<li>Další pohyb bude možný v {{ .TeamStatus.CooldownTo | timestamp }}</li>{{ end }}{{ end }}
 		{{ if .GameConfig.NotStarted $now }}<li>Hra začíná v {{ .GameConfig.Start | timestamp }}</li>

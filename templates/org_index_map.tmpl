@@ -73,6 +73,7 @@
 			<ul>
 				{{ if eq $game.OrderMode "points" }}<li>Získané body: <b>{{ .Points }}</b></li>{{ end }}
 				<li>Poslední pohyb: {{ .Status.LastMoved | timestamp }}</li>
+				{{ if .Config.Jitsi }}<li>Jitsi meeting: <a target="_blank" href="https://meet.jit.si/{{ .Config.Jitsi }}"><code>{{ .Config.Jitsi }}</code></a></li>{{ end }}
 				<li>Cooldown: {{ if .Status.CooldownTo }}{{ if $now.Before .Status.CooldownTo }}{{ .Status.CooldownTo | timestamp }}{{ end }}{{ end }}</li>
 			</ul>
 		</div>

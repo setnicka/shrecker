@@ -2,35 +2,42 @@
 	"id": "A",
 	"name": "Áčka",
 	"login": "aaa",
+	"jitsi": "angryAligator",
 	"password": "AAA"
 }, {
 	"id": "B",
 	"name": "Béčka",
 	"login": "bbb",
+	"jitsi": "blurBanana",
 	"password": "BBB"
 }, {
 	"id": "C",
 	"name": "Céčka",
 	"login": "ccc",
+	"jitsi": "crazyCitrus",
 	"password": "CCC"
 }, {
 	"id": "D",
 	"name": "Déčka",
 	"login": "ddd",
+	"jitsi": "deepDevil",
 	"password": "DDD"
 }, {
 	"id": "E",
 	"name": "Éčka",
 	"login": "eee",
+	"jitsi": "electricEscape",
 	"password": "EEE"
 }, {
 	"id": "F",
 	"name": "Efka",
 	"login": "fff",
+	"jitsi": "fluidFactory",
 	"password": "FFF"
 }, {
 	"id": "G",
 	"name": "Géčka",
 	"login": "ggg",
+	"jitsi": "garbageGame",
 	"password": "GGG"
 }]

@@ -77,6 +77,7 @@ type CipherConfig struct {
 type TeamConfig struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
+	Jitsi    string `json:"jitsi`
 	Login    string `json:"login"`
 	Password string `json:"password"`
 }

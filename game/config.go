@@ -77,11 +77,12 @@ type CipherConfig struct {
 
 // TeamConfig is parsed configuration from JSON
 type TeamConfig struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	Jitsi    string `json:"jitsi`
-	Login    string `json:"login"`
-	Password string `json:"password"`
+	ID       string            `json:"id"`
+	Name     string            `json:"name"`
+	Jitsi    string            `json:"jitsi`
+	Login    string            `json:"login"`
+	Password string            `json:"password"`
+	Members  map[string]string `json:"members"`
 }
 
 // PointRadius represent one point on map with radius

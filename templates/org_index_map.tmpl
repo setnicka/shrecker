@@ -70,10 +70,25 @@
 		<div class="team" id="team-{{ .Config.ID }}">
 			<a href="#" onclick="showPath('{{ .Config.ID }}'); return false;"><strong>{{ .Config.Name }}</strong></a>
 			(ID: <code>{{ .Config.ID }}</code>, login: <code>{{ .Config.Login }}</code>)
+			{{ if .Config.Members -}}
+				{{ $first := true }}
+				<a class="btn btn-secondary btn-sm" href="mailto:{{ range $name, $email := .Config.Members -}}
+					{{- if $first }}{{ $first = false }}{{ else }},{{ end -}}
+					%22{{ $name }}%22 %3C{{ $email }}%3E
+				{{- end }}?subject=Šifrovačka informace&amp;body=Login:{{ .Config.Login }}%0AHeslo:{{ .Config.Password }}">
+					Připravit email
+				</a>
+			{{ end -}}
 			<ul>
 				{{ if eq $game.OrderMode "points" }}<li>Získané body: <b>{{ .Points }}</b></li>{{ end }}
 				<li>Poslední pohyb: {{ .Status.LastMoved | timestamp }}</li>
 				{{ if .Config.Jitsi }}<li>Jitsi meeting: <a target="_blank" href="https://meet.jit.si/{{ .Config.Jitsi }}"><code>{{ .Config.Jitsi }}</code></a></li>{{ end }}
+				{{ if .Config.Members -}}{{ $first := true -}}
+				<li>Členové: {{ range $name, $email := .Config.Members -}}
+					{{- if $first }}{{ $first = false }}{{ else }}, {{ end -}}
+					<a href="mailto:%22{{ $name }}%22 %3C{{ $email }}%3E">{{ $name }}</a>
+				{{- end }}</li>
+				{{ end -}}
 				<li>Cooldown: {{ if .Status.CooldownTo }}{{ if $now.Before .Status.CooldownTo }}{{ .Status.CooldownTo | timestamp }}{{ end }}{{ end }}</li>
 			</ul>
 		</div>

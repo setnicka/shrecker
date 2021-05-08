@@ -1,7 +1,12 @@
 #orgomapa {
 	width: 100%;
-	height: 50%;
+	height: 55vh;
 	min-height: 600px;
+}
+
+#orgomapa.full {
+	position: absolute;
+	height: calc(100% - 60px);
 }
 
 table#dashboard {

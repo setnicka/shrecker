@@ -103,6 +103,7 @@ func (s *Server) Start() error {
 	r.Route("/org", func(r chi.Router) {
 		r.Use(s.orgAuth(s.basedir("/org/login")))
 		r.Get("/", s.orgIndex)
+		r.Get("/playback", s.orgPlayback)
 		r.Get("/team/{id}/", s.orgTeam)
 		r.Get("/cipher/{id}/download", s.orgCipherDownload)
 	})

@@ -120,6 +120,37 @@ func (s *Server) orgIndex(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *Server) orgPlayback(w http.ResponseWriter, r *http.Request) {
+	teams, _, gameConfig, err := s.game.GetAll(r.Context(), true, true, true)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	teamInfos := []teamInfo{}
+	for _, team := range teams {
+		// everything is preloaded by GetAll, no err possible, no need to check
+		status, _ := team.GetStatus()
+		locations, _ := team.GetLocations()
+		teamInfos = append(teamInfos, teamInfo{
+			Config:    team.GetConfig(),
+			Status:    status,
+			Locations: locations,
+		})
+	}
+	sort.Slice(teamInfos, func(i, j int) bool {
+		return teamInfos[i].Config.ID < teamInfos[j].Config.ID
+	})
+
+	s.executeTemplate(
+		w, "org_playback", orgIndexData{
+			GeneralData: s.getGeneralData("Orgovský přehled – playback", w, r),
+			GameConfig:  gameConfig,
+			Teams:       teamInfos,
+			Ciphers:     gameConfig.GetCiphers(),
+		},
+	)
+}
+
 func (s *Server) orgTeam(w http.ResponseWriter, r *http.Request) {
 
 }

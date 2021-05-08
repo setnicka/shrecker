@@ -3,6 +3,7 @@
 	<nav id="main-menu">
 		<h1><small>Shrecker</small> {{ .Title }}</h1>
 		<a href="{{ .Basedir }}/org/">Přehled</a>
+		<a href="{{ .Basedir }}/org/playback">Playback</a>
 
 		<form class="right" method="POST" action="{{ .Basedir }}/logout">
 			{{ .CSRF }}

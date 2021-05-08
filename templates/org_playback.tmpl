@@ -1,0 +1,75 @@
+{{ define "org_playback" }}
+{{ template "part_head_start" . }}
+{{ template "part_head_leaflet" . }}
+	<script src="{{ .Basedir }}/static/js/LeafletPlayback.js"></script>
+{{ template "part_head_end_org" . }}
+<body class="wide">
+{{ template "part_org_nav" . }}
+
+{{ $now := .Now }}
+{{ $basedir := .Basedir }}
+{{ $game := .GameConfig }}
+
+<div id="orgomapa" class="full"></div>
+
+<script type="text/javascript">
+// Map:
+var map = L.map('orgomapa', {
+	"center": [{{.GameConfig.StartLat}}, {{ .GameConfig.StartLon}}],
+	"zoom": {{ .GameConfig.MapDefaultZoom }}, "minZoom": 6, "maxZoom": 18,
+	"fullscreenControl": true, "fullscreenControlOptions": {"position":"topleft"}
+});
+var hash = new L.Hash(map);
+
+L.tileLayer('https://m{s}.mapserver.mapy.cz/turist-m/{z}-{x}-{y}', {
+	attribution: "<img src='https://mapy.cz/img/logo-small.svg' /> © Seznam.cz,a.s, © Přispěvatelé <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a>, © NASA",
+	subdomains: "1234",
+}).addTo(map);
+
+{{ range .Ciphers }}
+	L.circle({{ .Position.Point | latlon }}, {
+		color: 'yellow',
+		fillColor: '#fbff94',
+		fillOpacity: 0.5,
+		radius: {{ .Position.Radius }}
+	}).addTo(map);
+
+	L.marker({{ .Position.Point | latlon }}, {
+		title: "{{ .Name }}",
+		icon: cipherIcon,
+	}).addTo(map);
+{{ end }}
+
+var teamTracks = [
+{{ $first := true }}
+{{ range .Teams }}
+{
+	"type": "Feature",
+	"geometry": {
+		"type": "MultiPoint",
+		"coordinates": [{{- range .Locations }}[{{ .Point.Lon }}, {{ .Point.Lat }}], {{ end -}}]
+	},
+	"properties": {
+		"name": "{{ .Config.Name }}",
+		"time": [{{- range .Locations }}{{ .Time.Unix }}*1000, {{ end -}}]
+	}
+},
+{{ end}}
+];
+
+colors = ["blue", "green", "red", "orange", "brown", "black", "deeppink", "cyan"];
+{{ range $i, $team := .Teams }}
+L.polyline([{{- range $team.Locations }}{{ .Point | latlon }}, {{ end -}}], {color: colors[{{ $i }} % colors.length]}).addTo(map);
+{{ end }}
+
+var playbackOptions = {
+	playControl: true,
+	dateControl: true,
+	sliderControl: true,
+};
+var playback = new L.Playback(map, teamTracks, null, playbackOptions);
+</script>
+
+</body>
+</html>
+{{end}}

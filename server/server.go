@@ -105,6 +105,7 @@ func (s *Server) Start() error {
 		r.Get("/", s.orgIndex)
 		r.Get("/playback", s.orgPlayback)
 		r.Get("/team/{id}/", s.orgTeam)
+		r.Get("/team/{id}/gpx", s.orgTeamGPX)
 		r.Get("/cipher/{id}/download", s.orgCipherDownload)
 	})
 

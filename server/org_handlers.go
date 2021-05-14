@@ -152,7 +152,23 @@ func (s *Server) orgPlayback(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) orgTeam(w http.ResponseWriter, r *http.Request) {
+	http.Error(w, "not implemented", http.StatusNotImplemented)
+}
 
+func (s *Server) orgTeamGPX(w http.ResponseWriter, r *http.Request) {
+	teamID := chi.URLParam(r, "id")
+	team, _, _, err := s.game.GetTeamTx(r.Context(), teamID)
+	if err == game.ErrTeamNotFound {
+		http.NotFound(w, r)
+		return
+	}
+	locations, err := team.GetLocations()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	teamConfig := team.GetConfig()
+	outputGPX(w, r, *teamConfig, locations)
 }
 
 func (s *Server) orgCipherDownload(w http.ResponseWriter, r *http.Request) {

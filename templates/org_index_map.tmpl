@@ -90,6 +90,7 @@
 				{{- end }}</li>
 				{{ end -}}
 				<li>Cooldown: {{ if .Status.CooldownTo }}{{ if $now.Before .Status.CooldownTo }}{{ .Status.CooldownTo | timestamp }}{{ end }}{{ end }}</li>
+				<li>Trasa: <a href="{{ $basedir }}org/team/{{ .Config.ID }}/gpx">[stáhnout gpx]</a></li>
 			</ul>
 		</div>
 	{{ end }}

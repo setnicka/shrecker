@@ -149,32 +149,13 @@ func (t *Team) LogCipherArrival(cipher CipherConfig) error {
 	t.incHash()
 
 	// log previous ciphers solved
-	if t.gameConfig.LogPrevSolved {
-		prevID := ""
-		if len(cipher.DependsOn) == 1 {
-			prevID = cipher.DependsOn[0]
-		} else if len(cipher.DependsOn) == 0 {
-			for _, c := range t.gameConfig.ciphers {
-				if c.ID == cipher.ID {
-					break
-				}
-				if c.NotCipher {
-					continue
-				}
-				prevID = c.ID
+	for _, prevID := range cipher.LogSolved {
+		prevCipher := t.gameConfig.ciphersMap[prevID]
+		prevCipherStatus := t.cipherStatus[prevID]
+		if prevCipherStatus.Solved == nil && prevCipherStatus.Skip == nil {
+			if err := t.LogCipherSolved(prevCipher); err != nil {
+				return err
 			}
-		}
-
-		if prevID != "" {
-			prevCipher := t.gameConfig.ciphersMap[prevID]
-			prevCipherStatus := t.cipherStatus[prevID]
-			if prevCipherStatus.Solved == nil && prevCipherStatus.Skip == nil {
-				if err := t.LogCipherSolved(prevCipher); err != nil {
-					return err
-				}
-			}
-		} else {
-			log.Warningf("Cannot identify previous cipher to mark as solved from cipher %s", cipher.ID)
 		}
 	}
 
@@ -246,7 +227,7 @@ func (t *Team) DiscoverCiphers() ([]CipherConfig, error) {
 		if _, found := t.cipherStatus[cipher.ID]; found {
 			continue // already found
 		}
-		if cipher.StartVisible || cipher.Discoverable(t.status.Point, t.cipherStatus) {
+		if cipher.StartVisible || cipher.DiscoverableFromPoint(t.status.Point, t.cipherStatus) {
 			discovered = append(discovered, cipher)
 			if err := t.LogCipherArrival(cipher); err != nil {
 				return nil, err

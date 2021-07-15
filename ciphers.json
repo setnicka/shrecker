@@ -15,7 +15,8 @@
 	"file": "1-lab.pdf"
 }, {
 	"id": "2",
-	"depends_on": ["prvni"],
+	"depends_on": [["prvni"]],
+	"log_solved": ["prvni"],
 	"name": "Jehla v kupce sena",
 	"arrival_code": "JEHLA",
 	"position": {

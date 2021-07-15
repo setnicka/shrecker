@@ -30,7 +30,6 @@ const (
 // Config holds parsed game configuration from the ini file
 type Config struct {
 	Mode          gameMode  `ini:"mode"`
-	LogPrevSolved bool      `ini:"log_prev_solved"`
 	Start         time.Time `ini:"start"`
 	End           time.Time `ini:"end"`
 	CiphersFolder string    `ini:"ciphers_folder"`
@@ -61,7 +60,8 @@ type Config struct {
 type CipherConfig struct {
 	ID           string      `json:"id"`
 	NotCipher    bool        `json:"not_cipher"`           // used for PDF with game rules, ...
-	DependsOn    []string    `json:"depends_on,omitempty"` // IDs of ciphers that must be discovered before this one could be discovered (online-map mode)
+	DependsOn    [][]string  `json:"depends_on,omitempty"` // IDs of ciphers that must be discovered before this one could be discovered ((a AND b AND c) OR (d AND e) OR (f))
+	LogSolved    []string    `json:"log_solved"`           // list of ciphers to log as solved when this one is discovered
 	StartVisible bool        `json:"start_visible"`        // Cipher is visible from start (online-map mode)
 	Name         string      `json:"name"`                 // Displayed name of the cipher
 	ArrivalCode  string      `json:"arrival_code"`         // code used on arrival
@@ -79,7 +79,7 @@ type CipherConfig struct {
 type TeamConfig struct {
 	ID       string            `json:"id"`
 	Name     string            `json:"name"`
-	Jitsi    string            `json:"jitsi`
+	Jitsi    string            `json:"jitsi"` // link for Jitsi room (online-map mode)
 	Login    string            `json:"login"`
 	Password string            `json:"password"`
 	Members  map[string]string `json:"members"`
@@ -180,9 +180,16 @@ func (g *Game) loadConfig(globalConfig *ini.File) error {
 			}
 			codes[cipher.AdvanceCode] = cipher
 		}
-		for _, d := range cipher.DependsOn {
-			if _, found := config.ciphersMap[d]; !found {
-				return errors.Errorf("Config error: Cipher '%s' depends on '%s' but cipher with this ID does not exists", cipher.ID, d)
+		for _, variant := range cipher.DependsOn {
+			for _, d := range variant {
+				if _, found := config.ciphersMap[d]; !found {
+					return errors.Errorf("Config error: Cipher '%s' depends on '%s' but cipher with this ID does not exists", cipher.ID, d)
+				}
+			}
+		}
+		for _, id := range cipher.LogSolved {
+			if _, found := config.ciphersMap[id]; !found {
+				return errors.Errorf("Config error: Cipher '%s' has ID '%s' in 'log_solved' field but cipher with this ID does not exists", cipher.ID, id)
 			}
 		}
 	}

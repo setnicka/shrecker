@@ -24,17 +24,15 @@ type Server struct {
 }
 
 type config struct {
-	BaseDir           string `ini:"base_dir"`
-	StaticDir         string `ini:"static_dir"`
-	TemplateDir       string `ini:"template_dir"`
-	ListenAddress     string `ini:"listen_address"`
-	CSRFKey           string `ini:"csrf_key"`
-	OrgLogin          string `ini:"org_login"`
-	OrgPassword       string `ini:"org_password"`
-	SessionCookieName string `ini:"session_cookie_name"`
-	SessionSecret     string `ini:"session_secret"`
-	SessionMaxAge     int    `ini:"session_max_age"`
-	FlashCookieName   string `ini:"flash_cookie_name"`
+	BaseDir       string `ini:"base_dir"`
+	StaticDir     string `ini:"static_dir"`
+	TemplateDir   string `ini:"template_dir"`
+	ListenAddress string `ini:"listen_address"`
+	CSRFKey       string `ini:"csrf_key"`
+	OrgLogin      string `ini:"org_login"`
+	OrgPassword   string `ini:"org_password"`
+	SessionSecret string `ini:"session_secret"`
+	SessionMaxAge int    `ini:"session_max_age"`
 }
 
 type contextKey int
@@ -42,6 +40,11 @@ type contextKey int
 const (
 	orgStateKey contextKey = iota
 	teamStateKey
+)
+
+const (
+	sessionCookieName = "shrecker-session"
+	flashCookieName   = "shrecker-flash"
 )
 
 // New creates new server

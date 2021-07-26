@@ -15,9 +15,9 @@ import (
 func (s *Server) orgAuth(redirectPath ...string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			session, err := s.sessionStore.Get(r, s.config.SessionCookieName)
+			session, err := s.sessionStore.Get(r, sessionCookieName)
 			if err != nil {
-				http.Error(w, fmt.Sprintf("Cannot get session '%s': %v", s.config.SessionCookieName, err), http.StatusInternalServerError)
+				http.Error(w, fmt.Sprintf("Cannot get session '%s': %v", sessionCookieName, err), http.StatusInternalServerError)
 				return
 			}
 			authenticated, _ := session.Values["authenticated"].(bool)
@@ -44,7 +44,7 @@ func (s *Server) orgLoginPost(w http.ResponseWriter, r *http.Request) {
 	login := r.PostFormValue("login")
 	password := r.PostFormValue("password")
 	if login == s.config.OrgLogin && password == s.config.OrgPassword {
-		session, _ := s.sessionStore.Get(r, s.config.SessionCookieName)
+		session, _ := s.sessionStore.Get(r, sessionCookieName)
 		session.Values["authenticated"] = true
 		session.Values["org"] = true
 		session.Save(r, w)

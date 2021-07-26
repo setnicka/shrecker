@@ -33,7 +33,7 @@ func (s *Server) getGeneralData(title string, w http.ResponseWriter, r *http.Req
 }
 
 func (s *Server) logout(w http.ResponseWriter, r *http.Request) {
-	session, _ := s.sessionStore.Get(r, s.config.SessionCookieName)
+	session, _ := s.sessionStore.Get(r, sessionCookieName)
 	session.Options.MaxAge = -1
 	session.Save(r, w)
 	http.Redirect(w, r, s.basedir("/"), http.StatusSeeOther)
@@ -56,7 +56,7 @@ func (s *Server) setFlashMessage(w http.ResponseWriter, r *http.Request, mtype s
 	gob.Register(flashMessage{})
 
 	message := fmt.Sprintf(messageFormat, a...)
-	session, err := s.sessionStore.Get(r, s.config.FlashCookieName)
+	session, err := s.sessionStore.Get(r, flashCookieName)
 	if err != nil {
 		return
 	}
@@ -69,7 +69,7 @@ func (s *Server) setFlashMessage(w http.ResponseWriter, r *http.Request, mtype s
 
 func (s *Server) getFlashMessages(w http.ResponseWriter, r *http.Request) []flashMessage {
 	// 1. Get session
-	session, err := s.sessionStore.Get(r, s.config.FlashCookieName)
+	session, err := s.sessionStore.Get(r, flashCookieName)
 	if err != nil {
 		return nil
 	}

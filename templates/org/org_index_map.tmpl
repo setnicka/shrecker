@@ -1,0 +1,74 @@
+{{ define "org_index_map" }}
+{{ template "part_head_start" . }}
+{{ template "part_head_leaflet" . }}
+{{ template "part_head_end_org" . }}
+<body class="wide">
+{{ template "part_org_nav" . }}
+
+<div id="orgomapa"></div>
+
+<main>
+{{ template "part_org_index_dashboard" . }}
+</main>
+
+<script type="text/javascript">
+// Map:
+var map = L.map('orgomapa', {
+	"center": [{{.GameConfig.StartLat}}, {{ .GameConfig.StartLon}}],
+	"zoom": {{ .GameConfig.MapDefaultZoom }}, "minZoom": 6, "maxZoom": 18,
+	"fullscreenControl": true, "fullscreenControlOptions": {"position":"topleft"}
+});
+var hash = new L.Hash(map);
+
+L.tileLayer('https://m{s}.mapserver.mapy.cz/turist-m/{z}-{x}-{y}', {
+	attribution: "<img src='https://mapy.cz/img/logo-small.svg' /> © Seznam.cz,a.s, © Přispěvatelé <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a>, © NASA",
+	subdomains: "1234",
+}).addTo(map);
+
+{{ range .Ciphers }}
+	L.circle({{ .Position.Point | latlon }}, {
+		color: 'yellow',
+		fillColor: '#fbff94',
+		fillOpacity: 0.5,
+		radius: {{ .Position.Radius }}
+	}).addTo(map);
+
+	L.marker({{ .Position.Point | latlon }}, {
+		title: "{{ .Name }}",
+		icon: cipherIcon,
+	}).addTo(map).on('click', function() {highlightCipher("{{ .ID }}")});
+{{ end }}
+
+var displayedPath;
+function showPath(id) {
+	if (displayedPath) displayedPath.remove();
+	$("#orgomapa").scrollintoview();
+	map.panTo(team_positions[id]);
+	displayedPath = team_paths[id];
+	displayedPath.addTo(map);
+}
+
+var team_markers = [];
+var team_positions = [];
+var team_paths = [];
+{{ range .Teams }}
+	team_positions[{{ .Config.ID }}] = {{ .Status.Point | latlon }};
+	team_markers[{{ .Config.ID }}] = L.marker({{ .Status.Point | latlon }}, {
+		title: "{{ .Config.Name }}",
+		icon: teamIcon,
+	}).bindPopup("Tým {{ .Config.Name }}").addTo(map).on('click', function() {
+		displayedPath = team_paths["{{ .Config.ID }}"];
+		displayedPath.addTo(map);
+	});
+	team_paths[{{ .Config.ID }}] = L.polyline([{{- range .Locations }}{{ .Point | latlon }}, {{ end -}}], {color: 'blue'});
+
+{{ end}}
+
+map.on('popupclose', function(e) {
+	if (displayedPath) displayedPath.remove();
+});
+</script>
+
+</body>
+</html>
+{{end}}

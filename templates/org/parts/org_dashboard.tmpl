@@ -1,18 +1,10 @@
-{{ define "org_index_map" }}
-{{ template "part_head_start" . }}
-{{ template "part_head_leaflet" . }}
-{{ template "part_head_end_org" . }}
-<body class="wide">
-{{ template "part_org_nav" . }}
+{{ define "part_org_index_dashboard" }}
 
 {{ $now := .Now }}
 {{ $basedir := .Basedir }}
 {{ $game := .GameConfig }}
 
-<div id="orgomapa"></div>
-
-<main>
-<div class="pull-right" style="font-weight: bold;">
+<div class="float-right" style="font-weight: bold;">
 {{ if .GameConfig.NotStarted $now }}Hra začíná v {{ .GameConfig.Start | timestamp }}
 {{- else if .GameConfig.Ended $now }}Hra skončila v {{ .GameConfig.End | timestamp }}
 {{- else if .GameConfig.End }}Hra končí v {{ .GameConfig.End | timestamp }}{{ end }}
@@ -35,7 +27,7 @@
 	</tr></thead>
 	{{ range .Teams }}
 	<tr>
-		<th><a href="#" onclick="showPath('{{ .Config.ID }}'); return false;">{{ .Config.Name }}</a>
+		<th>{{ if $game.HasMap }}<a href="#" onclick="showPath('{{ .Config.ID }}'); return false;">{{ .Config.Name }}</a>{{ else }}<strong>{{ .Config.Name }}</strong>{{ end }}
 			{{- if eq $game.OrderMode "points" }}<br>Bodů: {{ .Points }}{{ end -}}
 		</th>
 		{{- $team := . -}}
@@ -68,9 +60,9 @@
 	<h2>Týmy</h2>
 	{{ range .Teams}}
 		<div class="team" id="team-{{ .Config.ID }}">
-			<a href="#" onclick="showPath('{{ .Config.ID }}'); return false;"><strong>{{ .Config.Name }}</strong></a>
+			{{ if $game.HasMap }}<a href="#" onclick="showPath('{{ .Config.ID }}'); return false;"><strong>{{ .Config.Name }}</strong></a>{{ else }}<strong>{{ .Config.Name }}</strong>{{ end }}
 			(ID: <code>{{ .Config.ID }}</code>, login: <code>{{ .Config.Login }}</code>)
-			{{ if .Config.Members -}}
+			{{ if and $game.IsOnline .Config.Members -}}
 				{{ $first := true }}
 				<a class="btn btn-secondary btn-sm" href="mailto:{{ range $name, $email := .Config.Members -}}
 					{{- if $first }}{{ $first = false }}{{ else }},{{ end -}}
@@ -84,77 +76,20 @@
 				<li>Poslední pohyb: {{ .Status.LastMoved | timestamp }}</li>
 				{{ if .Config.Jitsi }}<li>Jitsi meeting: <a target="_blank" href="https://meet.jit.si/{{ .Config.Jitsi }}"><code>{{ .Config.Jitsi }}</code></a></li>{{ end }}
 				{{ if .Config.Members -}}{{ $first := true -}}
-				<li>Členové: {{ range $name, $email := .Config.Members -}}
+				<li>Členové: {{ range $name, $contact := .Config.Members -}}
 					{{- if $first }}{{ $first = false }}{{ else }}, {{ end -}}
-					<a href="mailto:%22{{ $name }}%22 %3C{{ $email }}%3E">{{ $name }}</a>
+					{{ contact_link $name $contact }}
 				{{- end }}</li>
 				{{ end -}}
-				<li>Cooldown: {{ if .Status.CooldownTo }}{{ if $now.Before .Status.CooldownTo }}{{ .Status.CooldownTo | timestamp }}{{ end }}{{ end }}</li>
+				{{ if eq $game.Mode "online-map"}}<li>Cooldown: {{ if .Status.CooldownTo }}{{ if $now.Before .Status.CooldownTo }}{{ .Status.CooldownTo | timestamp }}{{ end }}{{ end }}</li>{{ end }}
 				<li>Trasa: <a href="{{ $basedir }}org/team/{{ .Config.ID }}/gpx">[stáhnout gpx]</a></li>
 			</ul>
 		</div>
 	{{ end }}
 	</div>
 </div>
-</main>
 
 <script type="text/javascript">
-// Map:
-var map = L.map('orgomapa', {
-	"center": [{{.GameConfig.StartLat}}, {{ .GameConfig.StartLon}}],
-	"zoom": {{ .GameConfig.MapDefaultZoom }}, "minZoom": 6, "maxZoom": 18,
-	"fullscreenControl": true, "fullscreenControlOptions": {"position":"topleft"}
-});
-var hash = new L.Hash(map);
-
-L.tileLayer('https://m{s}.mapserver.mapy.cz/turist-m/{z}-{x}-{y}', {
-	attribution: "<img src='https://mapy.cz/img/logo-small.svg' /> © Seznam.cz,a.s, © Přispěvatelé <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a>, © NASA",
-	subdomains: "1234",
-}).addTo(map);
-
-{{ range .Ciphers }}
-	L.circle({{ .Position.Point | latlon }}, {
-		color: 'yellow',
-		fillColor: '#fbff94',
-		fillOpacity: 0.5,
-		radius: {{ .Position.Radius }}
-	}).addTo(map);
-
-	L.marker({{ .Position.Point | latlon }}, {
-		title: "{{ .Name }}",
-		icon: cipherIcon,
-	}).addTo(map).on('click', function() {highlightCipher("{{ .ID }}")});
-{{ end }}
-
-var displayedPath;
-function showPath(id) {
-	if (displayedPath) displayedPath.remove();
-	$("#orgomapa").scrollintoview();
-	map.panTo(team_positions[id]);
-	displayedPath = team_paths[id];
-	displayedPath.addTo(map);
-}
-
-var team_markers = [];
-var team_positions = [];
-var team_paths = [];
-{{ range .Teams }}
-	team_positions[{{ .Config.ID }}] = {{ .Status.Point | latlon }};
-	team_markers[{{ .Config.ID }}] = L.marker({{ .Status.Point | latlon }}, {
-		title: "{{ .Config.Name }}",
-		icon: teamIcon,
-	}).bindPopup("Tým {{ .Config.Name }}").addTo(map).on('click', function() {
-		displayedPath = team_paths["{{ .Config.ID }}"];
-		displayedPath.addTo(map);
-	});
-	team_paths[{{ .Config.ID }}] = L.polyline([{{- range .Locations }}{{ .Point | latlon }}, {{ end -}}], {color: 'blue'});
-
-{{ end}}
-
-map.on('popupclose', function(e) {
-	if (displayedPath) displayedPath.remove();
-});
-
 // Hloupá pravidelná kontrola, jestli se něco změnilo
 setInterval(function() {
 	$.ajax({
@@ -167,9 +102,6 @@ setInterval(function() {
 		}
 	});
 }, 10_000);
-
 </script>
 
-</body>
-</html>
-{{end}}
+{{ end }}

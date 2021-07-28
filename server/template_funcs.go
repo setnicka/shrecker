@@ -3,9 +3,15 @@ package server
 import (
 	"fmt"
 	"html/template"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/setnicka/shrecker/game"
+)
+
+var (
+	isPhoneNumber = regexp.MustCompile(`^\+?[0-9]+$`).MatchString
 )
 
 func timestampGeneric(t time.Time, now time.Time) (string, string) {
@@ -65,6 +71,14 @@ var (
 				p.Lon *= -1
 			}
 			return fmt.Sprintf("%f%c, %f%c", p.Lat, latL, p.Lon, lonL)
+		},
+		"contact_link": func(name string, contact string) template.HTML {
+			if strings.Contains(contact, "@") {
+				return template.HTML(fmt.Sprintf("<a href='mailto:%%22%s%%22 %%3C%s%%3E'>%s</a>", name, contact, name))
+			} else if isPhoneNumber(contact) {
+				return template.HTML(fmt.Sprintf("<a href='tel:%s'>%s</a>", contact, name))
+			}
+			return template.HTML(name)
 		},
 	}
 )

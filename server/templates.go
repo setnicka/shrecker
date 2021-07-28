@@ -5,7 +5,6 @@ import (
 	"html/template"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"time"
 
@@ -30,11 +29,23 @@ func (s *Server) executeTemplate(w http.ResponseWriter, templateName string, dat
 	}
 }
 
+func findFiles(dir string, ext string) ([]string, error) {
+
+	files := []string{}
+	err := filepath.Walk(dir, func(path string, f os.FileInfo, err error) error {
+		if filepath.Ext(path) == ext {
+			files = append(files, path)
+		}
+		return nil
+	})
+
+	return files, err
+}
+
 // Scan directory with templates and if there is some changed file reload all templates,
 // then return these loaded templates.
 func (s *Server) getTemplates() (*template.Template, error) {
-	globPath := path.Join(s.config.TemplateDir, "*.tmpl")
-	templateFiles, err := filepath.Glob(globPath)
+	templateFiles, err := findFiles(s.config.TemplateDir, ".tmpl")
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +59,7 @@ func (s *Server) getTemplates() (*template.Template, error) {
 
 	if changed {
 		log.Debug("Parsing all template files because of new/changed template files")
-		s.templates, err = template.New("").Funcs(templateFuncs).ParseGlob(globPath)
+		s.templates, err = template.New("").Funcs(templateFuncs).ParseFiles(templateFiles...)
 		if err != nil {
 			return nil, err
 		}

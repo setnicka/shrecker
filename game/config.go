@@ -18,6 +18,7 @@ type orderMode string
 // Modes of the game
 const (
 	GameNormal      gameMode = "normal"
+	GameNormalMap            = "normal-map"
 	GameOnlineCodes          = "online-codes"
 	GameOnlineMap            = "online-map"
 )
@@ -82,6 +83,7 @@ type TeamConfig struct {
 	Jitsi    string            `json:"jitsi"` // link for Jitsi room (online-map mode)
 	Login    string            `json:"login"`
 	Password string            `json:"password"`
+	SMSCode  string            `json:"sms_code"` // used in SMS to identify this team
 	Members  map[string]string `json:"members"`  // maps name -> email or name -> phone number
 }
 

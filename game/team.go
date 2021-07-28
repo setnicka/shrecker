@@ -91,14 +91,12 @@ func (t *Team) GetDistanceTo(target Point) (distance float64, cooldown time.Dura
 func (t *Team) incHash() { t.gameConfig.teamHash[t.teamConfig.ID]++ }
 
 // MapMoveToPosition is used in online map mode and checks cooldown. It internally
-// calls LogPosition
+// calls LogPosition. Cooldown check should be done by caller.
 func (t *Team) MapMoveToPosition(target Point) error {
 	if _, err := t.GetStatus(); err != nil {
 		return err
 	}
-	if t.status.CooldownTo != nil && t.status.CooldownTo.After(t.Now()) {
-		return errors.Errorf("Could not move now, cooldown to %v", t.status.CooldownTo)
-	}
+
 	_, cooldown, _ := t.GetDistanceTo(target) // err is checked by GetStatus above
 	cooldownTo := t.Now().Add(cooldown)
 	t.status.CooldownTo = &cooldownTo

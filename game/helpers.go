@@ -41,15 +41,23 @@ func (c *Config) CouldTeamDownloadCiphers() bool {
 	return c.Mode == GameOnlineCodes || c.Mode == GameOnlineMap
 }
 
+// HasMap returns true if the game has map
+func (c *Config) HasMap() bool { return c.Mode == GameNormalMap || c.Mode == GameOnlineMap }
+
+// HasMessages returns true if the game has messages with codes sended by teams
+func (c *Config) HasMessages() bool { return c.Mode != GameOnlineMap }
+
+// IsOnline returns true if the game is online
+func (c *Config) IsOnline() bool { return c.Mode == GameOnlineCodes || c.Mode == GameOnlineMap }
+
 // NotStarted returns true if the game has set start time and it is in the future
-func (c *Config) NotStarted(now time.Time) bool {
-	return !c.Start.IsZero() && c.Start.After(now)
-}
+func (c *Config) NotStarted(now time.Time) bool { return !c.Start.IsZero() && c.Start.After(now) }
 
 // Ended returns true if the game has set end time and it is already ended
-func (c *Config) Ended(now time.Time) bool {
-	return !c.End.IsZero() && c.End.Before(now)
-}
+func (c *Config) Ended(now time.Time) bool { return !c.End.IsZero() && c.End.Before(now) }
+
+// HasEnd checks if the game has specified end time
+func (c *Config) HasEnd() bool { return !c.End.IsZero() }
 
 // GetGameHash returns combined hash of all teams (changed on every change)
 func (c *Config) GetGameHash() int {

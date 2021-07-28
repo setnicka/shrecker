@@ -14,6 +14,9 @@ func (c *Config) GetCipher(ID string) (*CipherConfig, bool) {
 
 // Discoverable tests if Cipher could be discovered from given previously discovered ciphers
 func (c *CipherConfig) Discoverable(discoveredCiphers map[string]CipherStatus) bool {
+	if _, found := discoveredCiphers[c.ID]; found {
+		return true
+	}
 	// dependencies [ [a, b, c], [d, e], [f] ] means (a AND b AND c) OR (d AND e) OR (f)
 	for _, variant := range c.DependsOn {
 		variantPossible := true
@@ -33,6 +36,9 @@ func (c *CipherConfig) Discoverable(discoveredCiphers map[string]CipherStatus) b
 // DiscoverableFromPoint tests if Cipher could be discovered by standing on
 // given Point with given previously discovered ciphers
 func (c *CipherConfig) DiscoverableFromPoint(pos Point, discoveredCiphers map[string]CipherStatus) bool {
+	if _, found := discoveredCiphers[c.ID]; found {
+		return true
+	}
 	return c.Discoverable(discoveredCiphers) && c.Position.InRadius(pos)
 }
 

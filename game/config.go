@@ -82,7 +82,7 @@ type TeamConfig struct {
 	Jitsi    string            `json:"jitsi"` // link for Jitsi room (online-map mode)
 	Login    string            `json:"login"`
 	Password string            `json:"password"`
-	Members  map[string]string `json:"members"`
+	Members  map[string]string `json:"members"`  // maps name -> email or name -> phone number
 }
 
 // PointRadius represent one point on map with radius

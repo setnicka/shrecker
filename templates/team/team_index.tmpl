@@ -1,0 +1,110 @@
+{{ define "team_index" }}
+{{ template "part_head_start" .}}
+{{ template "part_head_end" .}}
+<body>
+
+{{ $now := .Now }}
+{{ $csrf := .CSRF }}
+{{ $game := .GameConfig }}
+{{ $basedir := .Basedir }}
+{{ $enabled := not (or (.GameConfig.Ended $now) (.GameConfig.NotStarted $now)) }}
+
+<div id="team-status" style="color: white; background-color: #444444;">
+	<div class="container">
+	<form method="POST" action="{{ $basedir }}/logout" class="float-right">
+		{{ $csrf }}
+		<button class="btn btn-sm btn-secondary">Odhlásit se</button>
+	</form>
+	<h2>Šifrovačka – tým {{.TeamConfig.Name}}</h2>
+	<ul>
+		{{ if .TeamConfig.Jitsi }}<li>Jitsi meeting: <a target="_blank" href="https://meet.jit.si/{{ .TeamConfig.Jitsi }}"><code>{{ .TeamConfig.Jitsi }}</code></a></li>{{ end }}
+		{{ if eq .GameConfig.OrderMode "points" }}<li>Získané body: <b>{{ .TeamPoints }}</b></li>{{ end }}
+		{{ if .TeamStatus.CooldownTo }}{{ if $now.Before .TeamStatus.CooldownTo }}<li>Další pohyb bude možný v {{ .TeamStatus.CooldownTo | timestamp }}</li>{{ end }}{{ end }}
+		{{ if .GameConfig.NotStarted $now }}<li>Hra začíná v {{ .GameConfig.Start | timestamp }}</li>
+		{{- else if .GameConfig.Ended $now }}<li>Hra skončila v {{ .GameConfig.End | timestamp }}</li>
+		{{- else if .GameConfig.HasEnd }}<li>Hra končí v {{ .GameConfig.End | timestamp }}</li>{{ end }}
+	</ul>
+	</div>
+</div>
+
+<div class="container">
+
+{{ template "part_messageBox" . }}
+
+<form method="post" id="code-form" style="margin: 1rem 0px;">
+	{{ .CSRF }}
+	<div class="input-group">
+		<div class="input-group-prepend">
+			<span class="input-group-text">Kód:</span>
+		</div>
+		<input id="message" type="text" name="message" class="form-control" style="min-width: 100px; font-weight: bold;">
+		<div class="input-group-append">
+			<input type="submit" class="btn btn-primary" name="submit-message" value="Odeslat">
+		</div>
+	</div>
+	<small class="form-text text-muted"><b>Bez čísla týmu!</b> Za kód můžete připojit libovolný vzkaz organizátorům.</small>
+</form>
+
+<div id="cipher-list" class="panel">
+<h2>Šifry</h2>
+{{ range .Ciphers}}
+	<div class="cipher {{ if .Solved }}solved{{ else if .Skip }}skip{{ end }}" id="cipher-{{ .Config.ID }}">
+		<strong>{{ if and .Config.File $game.CouldTeamDownloadCiphers }}<a href="{{ $basedir }}/cipher/{{ .Config.ID }}/download">{{ .Config.Name }}</a>{{ else }}{{ .Config.Name }}{{ end }}</strong>
+		{{ if .Config.NotCipher }}{{ else }}
+		{{ if and (eq $game.OrderMode "points") .Points -}}
+			<small class="float-right text-muted">Získané body: <b>{{ .Points }}</b>
+				{{- if .ExtraPoints }} ({{ if gt .ExtraPoints 0 }}extra body{{ else }}penalizace{{ end }}: <b>{{ .ExtraPoints }}</b>){{ end -}}
+			</small>
+		{{ end }}
+		<ul>
+			<li><small>Objeveno v {{ .Arrival | timestamp }}</small></li>
+			{{ if .Hint }}<li><small>Nápověda v {{ .Hint | timestamp }}:</small><br><b>{{ .Config.HintText }}</b>{{ end }}
+			{{ if .Solved }}<li><small>Vyřešeno v {{ .Solved | timestamp }}</small></li>{{ end }}
+			{{ if .Skip }}<li><small>Přeskočeno v {{ .Skip | timestamp }}:</small><br><b>{{ .Config.SkipText }}</b>{{ end }}
+		</ul>
+		{{ $displayHintButton := and .Config.HintText (not .Hint) (not .Skip) }}
+		{{ $displaySkipButton := and .Config.SkipText (not .Skip) }}
+
+		{{ if and $enabled (not .Solved) (or $displayHintButton $displaySkipButton) }}
+		<form method="POST">
+			{{ $csrf }}
+			<input type="hidden" name="cipher" value="{{ .Config.ID }}">
+			<div class="btn-group">
+				{{- if $displayHintButton }}
+				<input type="submit" name="hint" class="btn btn-sm btn-primary" value="Požádat o nápovědu"
+					{{- if lt ( $now.Sub .Arrival ) $game.HintLimit }} disabled title="Nápovědu lze získat nejdříve {{ $game.HintLimit }} po příchodu" data-countdown-disabled="{{ .Arrival.Add $game.HintLimit | timestamp_js }}"
+					{{- end }} onclick="return confirm('Opravdu požádat o nápovědu k šifře {{ .Config.Name }}? Tato akce nelze vzít zpátky');">
+				{{- end }}
+				{{- if $displaySkipButton}}
+				<input type="submit" name="skip" class="btn btn-sm btn-danger" value="Přeskočit šifru"
+					{{- if lt ( $now.Sub .Arrival ) $game.SkipLimit }} disabled title="Přeskočit šifru lze získat nejdříve {{ $game.SkipLimit }} po příchodu" data-countdown-disabled="{{ .Arrival.Add $game.SkipLimit | timestamp_js }}"
+					{{- end }} onclick="return confirm('Opravdu přeskočit šifru {{ .Config.Name }}? Tato akce nelze vzít zpátky');">
+				{{- end }}
+			</div>
+		</form>
+		{{ end }}
+		{{ end }}
+	</div>
+{{ end }}
+</div>
+
+<div id="messages">
+<h2>Zprávy</h2>
+
+<table class="table table-bordered table-striped" id="history">
+<thead>
+	<tr><th>Čas</th><th>Zpráva od vás</th><th>Odpověď</th></tr>
+</thead>
+<tbody>
+	{{ range .Messages}}
+	<tr><td>{{ .Time | timestamp_hint }}</td><td>{{ .Text }}</td><td>{{ .Response }}</td></tr>
+	{{ end }}
+</tbody>
+</table>
+</div>
+
+</div>
+
+</body>
+</html>
+{{end}}

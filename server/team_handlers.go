@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"path"
+	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/coreos/go-log/log"
@@ -117,6 +119,7 @@ type teamIndexData struct {
 	TeamHash   int
 	Ciphers    []game.CipherStatus
 	Locations  []game.TeamLocationEntry
+	Messages   []game.Message
 }
 
 func (s *Server) teamHash(w http.ResponseWriter, r *http.Request) {
@@ -156,12 +159,12 @@ func (s *Server) teamIndex(w http.ResponseWriter, r *http.Request) {
 			// Test if we could hint
 			cipher, found := gameConfig.GetCipher(cipherID)
 			status, statusFound := cipherStatus[cipherID]
-			if !found {
-				s.setFlashMessage(w, r, "danger", "Šifra s tímto ID neexistuje")
-			} else if !statusFound {
-				s.setFlashMessage(w, r, "danger", "Tuto šifru jste zatím nenavštívili, nelze na ni žádat o nápovědu")
+			if !found || !statusFound {
+				s.setFlashMessage(w, r, "danger", "Šifra s tímto ID neexistuje nebo jste ji zatím nenavštívili, nelze na ni žádat o nápovědu nebo přeskočení")
 			} else if hint {
-				if cipher.HintText == "" {
+				if status.Skip != nil {
+					s.setFlashMessage(w, r, "info", "Tuto šifru jste již přeskočili")
+				} else if cipher.HintText == "" {
 					s.setFlashMessage(w, r, "danger", "Tato šifra nemá nápovědu")
 				} else if status.Hint != nil {
 					s.setFlashMessage(w, r, "info", "O nápovědu na tuto šifru jste již požádali")
@@ -192,11 +195,12 @@ func (s *Server) teamIndex(w http.ResponseWriter, r *http.Request) {
 					s.setFlashMessage(w, r, "success", "Šifra přeskočena.<br>%s", cipher.SkipText)
 				}
 			}
+			http.Redirect(w, r, s.basedir("/"), http.StatusSeeOther)
 		}
 		// Handle move to position
 		latStr := r.PostFormValue("move-lat")
 		lonStr := r.PostFormValue("move-lon")
-		if latStr != "" && lonStr != "" {
+		if gameConfig.Mode == game.GameOnlineMap && latStr != "" && lonStr != "" {
 			lat, latErr := strconv.ParseFloat(latStr, 32)
 			lon, lonErr := strconv.ParseFloat(lonStr, 32)
 			if latErr != nil || lonErr != nil {
@@ -232,12 +236,30 @@ func (s *Server) teamIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	locations, err := team.GetLocations()
-	if err != nil {
-		log.Errorf("Cannot get team locations: %+v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	locations := []game.TeamLocationEntry{}
+	if gameConfig.Mode == game.GameOnlineMap {
+		locations, err = team.GetLocations()
+		if err != nil {
+			log.Errorf("Cannot get team locations: %+v", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
+
+	messages := []game.Message{}
+	if gameConfig.HasMessages() {
+		messages, err = team.GetMessages()
+		if err != nil {
+			log.Errorf("Cannot get team messages: %+v", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		sort.Slice(messages, func(i, j int) bool {
+			return messages[i].Time.After(messages[j].Time)
+		})
+	}
+
 	points, err := team.SumPoints()
 	if err != nil {
 		log.Errorf("Cannot get team points: %+v", err)
@@ -245,26 +267,33 @@ func (s *Server) teamIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	switch gameConfig.Mode {
-	case game.GameNormal:
-		http.Error(w, "NOT YET IMPLEMENTED", http.StatusNotImplemented)
-	case game.GameOnlineCodes:
-		http.Error(w, "NOT YET IMPLEMENTED", http.StatusNotImplemented)
-	case game.GameOnlineMap:
-		s.executeTemplate(
-			w, "team_index_map", teamIndexData{
-				teamGeneralData: s.getTeamGeneralData("Mapa šifrovačky", w, r),
-				TeamStatus:      status,
-				TeamPoints:      points,
-				TeamHash:        team.GetHash(),
-				Ciphers:         ciphers,
-				Locations:       locations,
-			},
-		)
+	templateName := "team_index"
+	title := "Šifrovačka – webový systém"
+	if gameConfig.Mode == game.GameOnlineMap {
+		templateName = "team_index_map"
+		title = "Mapa šifrovačky"
 	}
+
+	s.executeTemplate(
+		w, templateName, teamIndexData{
+			teamGeneralData: s.getTeamGeneralData(title, w, r),
+			TeamStatus:      status,
+			TeamPoints:      points,
+			TeamHash:        team.GetHash(),
+			Ciphers:         ciphers,
+			Locations:       locations,
+			Messages:        messages,
+		},
+	)
 }
 
 func (s *Server) teamCalcMove(w http.ResponseWriter, r *http.Request) {
+	team, _, gameConfig := getTeamState(r)
+	if gameConfig.Mode != game.GameOnlineMap {
+		http.NotFound(w, r)
+		return
+	}
+
 	lat, latErr := strconv.ParseFloat(r.URL.Query().Get("lat"), 32)
 	lon, lonErr := strconv.ParseFloat(r.URL.Query().Get("lon"), 32)
 	if latErr != nil || lonErr != nil {
@@ -272,7 +301,6 @@ func (s *Server) teamCalcMove(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	team, _, gameConfig := getTeamState(r)
 	status, err := team.GetStatus()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

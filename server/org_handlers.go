@@ -102,22 +102,20 @@ func (s *Server) orgIndex(w http.ResponseWriter, r *http.Request) {
 		return teamInfos[i].Config.ID < teamInfos[j].Config.ID
 	})
 
-	switch gameConfig.Mode {
-	case game.GameNormal:
-		http.Error(w, "NOT YET IMPLEMENTED", http.StatusNotImplemented)
-	case game.GameOnlineCodes:
-		http.Error(w, "NOT YET IMPLEMENTED", http.StatusNotImplemented)
-	case game.GameOnlineMap:
-		s.executeTemplate(
-			w, "org_index_map", orgIndexData{
-				GeneralData: s.getGeneralData("Orgovský přehled", w, r),
-				GameConfig:  gameConfig,
-				GameHash:    gameConfig.GetGameHash(),
-				Teams:       teamInfos,
-				Ciphers:     gameConfig.GetCiphers(),
-			},
-		)
+	templateName := "org_index"
+	if gameConfig.HasMap() {
+		templateName = "org_index_map"
 	}
+
+	s.executeTemplate(
+		w, templateName, orgIndexData{
+			GeneralData: s.getGeneralData("Orgovský přehled", w, r),
+			GameConfig:  gameConfig,
+			GameHash:    gameConfig.GetGameHash(),
+			Teams:       teamInfos,
+			Ciphers:     gameConfig.GetCiphers(),
+		},
+	)
 }
 
 func (s *Server) orgPlayback(w http.ResponseWriter, r *http.Request) {

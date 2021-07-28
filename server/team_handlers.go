@@ -151,6 +151,22 @@ func (s *Server) teamIndex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == http.MethodPost {
+		// Handle codes from message input
+		if r.PostFormValue("submit-message") != "" {
+			respType, resp, err := team.ProcessMessage(strings.TrimSpace(r.PostFormValue("message")), "WEB", 0)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			tx.Commit() // always commit after message because it is always saved into DB
+			if respType == "error" {
+				respType = "danger"
+			}
+			s.setFlashMessage(w, r, respType, resp)
+
+			http.Redirect(w, r, s.basedir("/"), http.StatusSeeOther)
+		}
+
 		// Handle hint and skip
 		hint := r.PostFormValue("hint") != ""
 		skip := r.PostFormValue("skip") != ""

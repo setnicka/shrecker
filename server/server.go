@@ -28,6 +28,7 @@ type config struct {
 	StaticDir     string `ini:"static_dir"`
 	TemplateDir   string `ini:"template_dir"`
 	ListenAddress string `ini:"listen_address"`
+	SecureCookie  bool   `ini:"secure_cookie"`
 	CSRFKey       string `ini:"csrf_key"`
 	OrgLogin      string `ini:"org_login"`
 	OrgPassword   string `ini:"org_password"`
@@ -63,7 +64,7 @@ func New(config *ini.File, game *game.Game) (*Server, error) {
 	// Setup cookie store
 	cookieStore := sessions.NewCookieStore([]byte(s.config.SessionSecret))
 	cookieStore.MaxAge(s.config.SessionMaxAge)
-	cookieStore.Options.Secure = true
+	cookieStore.Options.Secure = s.config.SecureCookie
 	//cookieStore.Options.Domain = ".fuf.me"
 	s.sessionStore = cookieStore
 
@@ -83,6 +84,7 @@ func (s *Server) Start() error {
 	r.Use(csrf.Protect(
 		[]byte(s.config.CSRFKey),
 		csrf.Path("/"),
+		csrf.Secure(s.config.SecureCookie),
 	))
 
 	// Static resources

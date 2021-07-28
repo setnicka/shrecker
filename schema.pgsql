@@ -2,6 +2,7 @@
 DROP TABLE IF EXISTS team_location_history;
 DROP TABLE IF EXISTS cipher_status;
 DROP TABLE IF EXISTS team_status;
+DROP TABLE IF EXISTS messages;
 
 CREATE TABLE team_status (
 	team		text		PRIMARY KEY,
@@ -31,3 +32,17 @@ CREATE TABLE team_location_history (
 	lon		float		NOT NULL,
 	FOREIGN KEY(team) REFERENCES team_status(team) ON DELETE CASCADE
 );
+
+CREATE TABLE messages (
+	id		SERIAL		PRIMARY KEY,
+	team		text		NOT NULL,
+	cipher		text		NOT NULL,
+	time		timestamptz	DEFAULT CURRENT_TIMESTAMP,
+	phone_number	text		NOT NULL,
+	sms_id		integer		NOT NULL,
+	text		text		NOT NULL,
+	response	text		NOT NULL
+);
+
+CREATE INDEX messages_sms_id ON messages(sms_id);
+CREATE INDEX messages_team ON messages(team);

@@ -57,7 +57,7 @@ func (g *Game) LoginTeam(login, password string) (*Team, *Config, error) {
 // GetAll returns all teams, game config and DB transaction,
 // which is used for all changes on the Teams. Changes must be committed by
 // Commit call on the transaction.
-func (g *Game) GetAll(ctx context.Context, loadStatus, loadCiphers, loadLocations bool) (map[string]*Team, *sqlxpp.Tx, *Config, error) {
+func (g *Game) GetAll(ctx context.Context, loadStatus, loadCiphers, loadLocations, loadMessages bool) (map[string]*Team, *sqlxpp.Tx, *Config, error) {
 	gameConfig := g.GetConfig()
 	tx, err := g.db.BeginCtx(ctx)
 	now := time.Now()
@@ -98,7 +98,9 @@ func (g *Game) GetAll(ctx context.Context, loadStatus, loadCiphers, loadLocation
 		for _, cs := range cipherStatuses {
 			cs.init(&gameConfig)
 			teams[cs.Team].cipherStatus[cs.Cipher] = cs
-			teams[cs.Team].cipherStatusLoaded = true
+		}
+		for _, teamID := range teamIDs {
+			teams[teamID].cipherStatusLoaded = true
 		}
 	}
 	if loadLocations {
@@ -112,7 +114,25 @@ func (g *Game) GetAll(ctx context.Context, loadStatus, loadCiphers, loadLocation
 		}
 		for _, entry := range locationEntries {
 			teams[entry.Team].locations = append(teams[entry.Team].locations, entry)
-			teams[entry.Team].locationsLoaded = true
+		}
+		for _, teamID := range teamIDs {
+			teams[teamID].locationsLoaded = true
+		}
+	}
+	if loadMessages {
+		messages := []Message{}
+		query, args, err := sqlx.In("SELECT * FROM messages WHERE team IN (?)", teamIDs)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		if err := tx.SelectE(&messages, tx.Rebind(query), args...); err != nil {
+			return nil, nil, nil, err
+		}
+		for _, msg := range messages {
+			teams[msg.Team].messages = append(teams[msg.Team].messages, msg)
+		}
+		for _, teamID := range teamIDs {
+			teams[teamID].messagesLoaded = true
 		}
 	}
 

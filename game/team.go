@@ -60,6 +60,17 @@ func (t *Team) GetLocations() ([]TeamLocationEntry, error) {
 	return t.locations, nil
 }
 
+// GetMessages loads messages of this team from DB (or returns cached ones)
+func (t *Team) GetMessages() ([]Message, error) {
+	if !t.messagesLoaded {
+		if err := t.tx.SelectE(&t.messages, "SELECT * FROM messages WHERE team=$1 ORDER BY time", t.teamConfig.ID); err != nil {
+			return nil, err
+		}
+		t.messagesLoaded = true
+	}
+	return t.messages, nil
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // SumPoints runs through all ciphers and sum points for them

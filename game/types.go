@@ -32,6 +32,8 @@ type Team struct {
 	cipherStatusLoaded bool
 	locations          []TeamLocationEntry
 	locationsLoaded    bool
+	messages           []Message
+	messagesLoaded     bool
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -70,4 +72,16 @@ type TeamLocationEntry struct {
 	Team string    `db:"team"`
 	Time time.Time `db:"time"`
 	Point
+}
+
+// Message from SMS or through web interface
+type Message struct {
+	ID          int       `db:"id"`
+	Team        string    `db:"team"`
+	Cipher      string    `db:"cipher"` // if message could be mapped to cipher, empty string otherwise
+	Time        time.Time `db:"time"`
+	PhoneNumber string    `db:"phone_number"`
+	SMSID       int       `db:"sms_id"`
+	Text        string    `db:"text"`
+	Response    string    `db:"response"`
 }

@@ -79,7 +79,7 @@ type teamInfo struct {
 }
 
 func (s *Server) orgIndex(w http.ResponseWriter, r *http.Request) {
-	teams, _, gameConfig, err := s.game.GetAll(r.Context(), true, true, true)
+	teams, _, gameConfig, err := s.game.GetAll(r.Context(), true, true, true, false)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -121,7 +121,7 @@ func (s *Server) orgIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) orgPlayback(w http.ResponseWriter, r *http.Request) {
-	teams, _, gameConfig, err := s.game.GetAll(r.Context(), true, true, true)
+	teams, _, gameConfig, err := s.game.GetAll(r.Context(), true, true, true, false)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

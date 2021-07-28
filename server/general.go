@@ -14,20 +14,20 @@ import (
 
 // GeneralData for rendering page
 type GeneralData struct {
-	Title    string
-	Now      time.Time
-	Messages []flashMessage
-	CSRF     template.HTML
-	Basedir  string
+	Title         string
+	Now           time.Time
+	FlashMessages []flashMessage
+	CSRF          template.HTML
+	Basedir       string
 }
 
 func (s *Server) getGeneralData(title string, w http.ResponseWriter, r *http.Request) GeneralData {
 	data := GeneralData{
-		Title:    title,
-		Now:      time.Now(),
-		Messages: s.getFlashMessages(w, r),
-		CSRF:     csrf.TemplateField(r),
-		Basedir:  s.config.BaseDir,
+		Title:         title,
+		Now:           time.Now(),
+		FlashMessages: s.getFlashMessages(w, r),
+		CSRF:          csrf.TemplateField(r),
+		Basedir:       s.config.BaseDir,
 	}
 	return data
 }

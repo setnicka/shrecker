@@ -41,6 +41,8 @@ type Config struct {
 	MapDefaultZoom int     `ini:"map_default_zoom"`
 	MapSpeed       float64 `ini:"map_speed"`
 
+	AutologPosition bool `ini:"autolog_position"`
+
 	// Time settins
 	HintLimit time.Duration `ini:"hint_limit"`
 	SkipLimit time.Duration `ini:"skip_limit"`

@@ -155,7 +155,7 @@ func (t *Team) LogCipherArrival(cipher CipherConfig) error {
 		return err
 	}
 	log.Infof("Team '%s' (ID '%s') discovered cipher '%s'", t.teamConfig.Name, t.teamConfig.ID, cipher.ID)
-	t.incHash()
+	defer t.incHash()
 
 	// log previous ciphers solved
 	for _, prevID := range cipher.LogSolved {
@@ -168,7 +168,9 @@ func (t *Team) LogCipherArrival(cipher CipherConfig) error {
 		}
 	}
 
-	// TODO: move to cipher coordinates when not using mode=online-map?
+	if t.gameConfig.AutologPosition {
+		return t.LogPosition(cipher.Position.Point)
+	}
 	return nil
 }
 

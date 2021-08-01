@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/Songmu/prompter v0.5.0
+	github.com/boombuler/barcode v1.0.1
 	github.com/coreos/go-log v0.0.0-20180308165134-b22fd89e1882
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/go-chi/chi v1.5.4

@@ -24,6 +24,7 @@ type Server struct {
 }
 
 type config struct {
+	BaseURL       string `ini:"base_url"`
 	BaseDir       string `ini:"base_dir"`
 	StaticDir     string `ini:"static_dir"`
 	TemplateDir   string `ini:"template_dir"`
@@ -112,6 +113,7 @@ func (s *Server) Start() error {
 		r.Get("/team/{id}/", s.orgTeam)
 		r.Get("/team/{id}/gpx", s.orgTeamGPX)
 		r.Get("/cipher/{id}/download", s.orgCipherDownload)
+		r.Get("/qr-gen", s.orgQRCodeGen)
 	})
 
 	// Team api - fail on unauthorized

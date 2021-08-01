@@ -39,8 +39,8 @@ func (s *Server) logout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, s.basedir("/"), http.StatusSeeOther)
 }
 
-func (s *Server) basedir(url string) string {
-	return path.Join(s.config.BaseDir, url)
+func (s *Server) basedir(url string, a ...interface{}) string {
+	return path.Join(s.config.BaseDir, fmt.Sprintf(url, a...))
 }
 
 ////////////////////////////////////////////////////////////////////////////////

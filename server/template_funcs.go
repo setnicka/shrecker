@@ -80,5 +80,8 @@ var (
 			}
 			return template.HTML(name)
 		},
+		"safeHTML": func(s string) template.HTML {
+			return template.HTML(s)
+		},
 	}
 )

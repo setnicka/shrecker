@@ -2,11 +2,14 @@ package server
 
 import (
 	"fmt"
+	"image/png"
 	"net/http"
 	"path"
 	"sort"
 	"strconv"
 
+	"github.com/boombuler/barcode"
+	"github.com/boombuler/barcode/qr"
 	"github.com/go-chi/chi"
 	"github.com/setnicka/shrecker/game"
 )
@@ -179,4 +182,21 @@ func (s *Server) orgCipherDownload(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Disposition", fmt.Sprintf("filename=%s.pdf", cipher.ID))
 	http.ServeFile(w, r, path.Join(gameConfig.CiphersFolder, cipher.File))
+}
+
+func (s *Server) orgQRCodeGen(w http.ResponseWriter, r *http.Request) {
+	text := r.FormValue("text")
+	size := 128
+	sizeS := r.FormValue("size")
+	if sizeS != "" {
+		var err error
+		if size, err = strconv.Atoi(sizeS); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+	}
+
+	qrCode, _ := qr.Encode(text, qr.L, qr.Auto)
+	qrCode, _ = barcode.Scale(qrCode, size, size)
+
+	png.Encode(w, qrCode)
 }

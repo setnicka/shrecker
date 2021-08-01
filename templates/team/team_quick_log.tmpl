@@ -1,0 +1,33 @@
+{{ define "team_quick_log" }}
+{{ template "part_head_start" . }}
+{{ template "part_head_end" . }}
+
+{{ $now := .Now }}
+
+<div id="team-status" style="color: white; background-color: #444444;">
+	<div class="container">
+		<h2>Šifrovačka – tým {{.Team.Name}}</h2>
+	</div>
+</div>
+
+<main>
+	<h2>Rychlé zalogování kódu</h2>
+	{{ template "part_messageBox" . }}
+	<form method="post" class="form">
+		{{ .CSRF }}
+		Za kód můžete doplnit libovolný vzkaz orgům:
+		<div class="input-group">
+			<div class="input-group-prepend">
+			  <span class="input-group-text"><b>{{ .Code }}</b></span>
+			</div>
+			<input type="text" class="form-control" name="message" placeholder="Vzkaz orgům (volitelné)">
+			<div class="input-group-append">
+				<button type="submit" class="btn btn-primary">Zalogovat kód</button>
+			</div>
+		</div>
+	</form>
+</main>
+
+</body>
+</html>
+{{ end }}

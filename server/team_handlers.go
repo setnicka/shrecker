@@ -83,8 +83,35 @@ func (s *Server) getTeamGeneralData(title string, w http.ResponseWriter, r *http
 
 ////////////////////////////////////////////////////////////////////////////////
 
+type teamQuickLoginData struct {
+	GeneralData
+	Team     game.TeamConfig
+	Login    string
+	Password string
+}
+
 func (s *Server) teamLogin(w http.ResponseWriter, r *http.Request) {
 	s.executeTemplate(w, "team_login", s.getGeneralData("Přihlášení do hry", w, r))
+}
+func (s *Server) teamQuickLogin(w http.ResponseWriter, r *http.Request) {
+	login := r.URL.Query().Get("l")
+	password := r.URL.Query().Get("p")
+	if login == "" || password == "" {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+	team, _, err := s.game.LoginTeam(login, password)
+	if err != nil {
+		s.setFlashMessage(w, r, "danger", "Neplatné přihlašovací údaje")
+		http.Redirect(w, r, s.basedir("/login"), http.StatusSeeOther)
+		return
+	}
+	s.executeTemplate(w, "team_quick_login", teamQuickLoginData{
+		GeneralData: s.getGeneralData("Přihlášení do hry", w, r),
+		Team:        *team.GetConfig(),
+		Login:       login,
+		Password:    password,
+	})
 }
 func (s *Server) teamLoginPost(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
@@ -346,6 +373,52 @@ func (s *Server) teamCalcMove(w http.ResponseWriter, r *http.Request) {
 			"cooldown": cooldown.String(),
 		})
 	}
+}
+
+type teamQuickLogData struct {
+	GeneralData
+	Team *game.TeamConfig
+	Code string
+}
+
+func (s *Server) teamQuickLog(w http.ResponseWriter, r *http.Request) {
+	code := chi.URLParam(r, "code")
+	team, tx, gameConfig := getTeamState(r)
+
+	// Try to find cipher with this arrival of advance code
+	var cipher game.CipherConfig
+	var found bool
+	for _, cipher = range gameConfig.GetCiphers() {
+		if cipher.ArrivalCode == code || cipher.AdvanceCode == code {
+			found = true
+			break
+		}
+	}
+	if !found {
+		http.Error(w, "Neznámý kód "+code, http.StatusNotFound)
+		return
+	}
+
+	if r.Method == http.MethodPost {
+		message := code + " " + strings.TrimSpace(r.PostFormValue("message"))
+		respType, resp, err := team.ProcessMessage(message, "WEB-QR", 0)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		tx.Commit() // always commit after message because it is always saved into DB
+		if respType == "error" {
+			respType = "danger"
+		}
+		s.setFlashMessage(w, r, respType, resp)
+		http.Redirect(w, r, s.basedir("/"), http.StatusSeeOther)
+	}
+
+	s.executeTemplate(w, "team_quick_log", teamQuickLogData{
+		GeneralData: s.getGeneralData("Zalogování kódu", w, r),
+		Team:        team.GetConfig(),
+		Code:        code,
+	})
 }
 
 func (s *Server) teamCipherDownload(w http.ResponseWriter, r *http.Request) {

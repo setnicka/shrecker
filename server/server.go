@@ -98,6 +98,7 @@ func (s *Server) Start() error {
 	r.Get("/login", s.teamLogin)
 	r.Post("/login", s.teamLoginPost)
 	r.Post("/logout", s.logout)
+	r.Get("/quick-login", s.teamQuickLogin)
 
 	// Org api - fail on unauthorized
 	r.Route("/org/api", func(r chi.Router) {
@@ -133,6 +134,8 @@ func (s *Server) Start() error {
 		r.Use(s.teamAuth(s.basedir("/login")))
 		r.Get("/", s.teamIndex)
 		r.Post("/", s.teamIndex)
+		r.Get("/quick-log/{code}", s.teamQuickLog)
+		r.Post("/quick-log/{code}", s.teamQuickLog)
 		r.Get("/cipher/{id}/download", s.teamCipherDownload)
 	})
 

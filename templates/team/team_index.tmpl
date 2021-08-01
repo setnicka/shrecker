@@ -57,9 +57,9 @@
 			</small>
 		{{ end }}
 		<ul>
-			<li><small>Objeveno v {{ .Arrival | timestamp }}</small></li>
+			<li><small>Objeveno v {{ .Arrival | timestamp }}</small>{{ if .Config.ArrivalText }}<br><b>{{ .Config.ArrivalText }}</b>{{ end }}</li>
 			{{ if .Hint }}<li><small>Nápověda v {{ .Hint | timestamp }}:</small><br><b>{{ .Config.HintText }}</b>{{ end }}
-			{{ if .Solved }}<li><small>Vyřešeno v {{ .Solved | timestamp }}</small></li>{{ end }}
+			{{ if .Solved }}<li><small>Vyřešeno v {{ .Solved | timestamp }}</small>{{ if .Config.AdvanceText }}<br><b>{{ .Config.AdvanceText }}</b>{{ end }}</li>{{ end }}
 			{{ if .Skip }}<li><small>Přeskočeno v {{ .Skip | timestamp }}:</small><br><b>{{ .Config.SkipText }}</b>{{ end }}
 		</ul>
 		{{ $displayHintButton := and .Config.HintText (not .Hint) (not .Skip) }}
@@ -97,7 +97,7 @@
 </thead>
 <tbody>
 	{{ range .Messages}}
-	<tr><td>{{ .Time | timestamp_hint }}</td><td>{{ .Text }}</td><td>{{ .Response }}</td></tr>
+	<tr><td>{{ .Time | timestamp_hint }}</td><td>{{ .Text }}</td><td>{{ .Response | safeHTML }}</td></tr>
 	{{ end }}
 </tbody>
 </table>

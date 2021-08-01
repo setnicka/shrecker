@@ -1,0 +1,18 @@
+{{ define "team_quick_login" }}
+{{ template "part_head_start" . }}
+{{ template "part_head_end" . }}
+
+<main>
+	<h1>Šifrovačka – Přihlášení do hry</h1>
+	{{ template "part_messageBox" . }}
+	<form method="post" class="form" action="{{ .Basedir }}/login">
+		{{ .CSRF }}
+		<input type="hidden" name="login" value="{{ .Login }}">
+		<input type="hidden" name="password" value="{{ .Password }}">
+		<button type="submit" class="btn btn-primary">Přihlásit se jako tým {{ .Team.Name }}</button>
+	</form>
+</main>
+
+</body>
+</html>
+{{ end }}

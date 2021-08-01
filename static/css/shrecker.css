@@ -6,7 +6,7 @@ main {
 	width: 100%;
 }
 
-body.wide main {
+body.wide main, main.wide {
 	max-width: none;
 }
 

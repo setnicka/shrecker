@@ -1,0 +1,118 @@
+{{ define "org_team_cipher" }}
+{{ template "part_head_start" . }}
+{{ template "part_head_end_org" . }}
+<body>
+{{ template "part_org_nav" . }}
+
+{{ $now := .Now }}
+{{ $basedir := .Basedir }}
+{{ $game := .GameConfig }}
+
+<main>
+<h2><a href="{{ $basedir }}/org/team/{{ .Team.ID }}">Tým {{ .Team.Name }}</a> – Šifra {{ .Cipher.Name }}</h2>
+
+<div class="row">
+
+<div class="col-sm">
+<h3>Detaily šifry</h3>
+
+<table class="table table-sm">
+	<tr><td>ID</td><td><code>{{ .Cipher.ID }}</code></td></tr>
+	{{ if .Cipher.NotCipher }}<tr><td>Není šifra</td></tr>{{ end }}
+	{{ if .Cipher.DependsOn }}
+	{{ $multiple := gt (len .Cipher.DependsOn) 1 }}
+	<tr><td title="Nutno objevit před objevením této šifry">Závislosti</td><td>
+		{{ range $i, $dep := .Cipher.DependsOn }}
+			{{ if $multiple }}Varianta {{ $i }}: {{ end }}
+			{{- $first := true -}}
+			{{ range $cid := $dep -}}
+				{{- $cipher := index $.CiphersMap $cid -}}
+				{{- $cipherStatus := index $.CiphersStatus $cid -}}
+				{{- if $first }}{{ $first = false }}{{ else }}, {{ end -}}
+				{{ if and $cipherStatus $cipherStatus.Solved }}✅{{ else }}❌{{ end }}
+				<a href="{{ $basedir }}/org/team/{{ $.Team.ID }}/cipher/{{ $cid }}">{{ $cipher.Name }}</a>
+			{{- end }}
+			<br>
+		{{ end }}
+	</td></tr>
+	{{ end }}
+	{{ if .Cipher.ArrivalCode }}<tr><td>Kód při příchodu</td><td><code>{{ .Cipher.ArrivalCode }}</code></td></tr>{{ end }}
+	{{ if .Cipher.ArrivalText }}<tr><td>Příchodová zpráva</td><td>{{ .Cipher.ArrivalText }}</td></tr>{{ end }}
+	{{ if .Cipher.AdvanceCode }}<tr><td>Postupové heslo</td><td><code>{{ .Cipher.AdvanceCode }}</code></td></tr>{{ end }}
+	{{ if .Cipher.AdvanceText }}<tr><td>Postupová zpráva</td><td>{{ .Cipher.AdvanceText }}</td></tr>{{ end }}
+	{{ if .Cipher.HintText }}<tr><td>Nápověda</td><td>{{ .Cipher.HintText }}</td></tr>{{ end }}
+	{{ if .Cipher.SkipText }}<tr><td>Přeskočení</td><td>{{ .Cipher.SkipText }}</td></tr>{{ end }}
+	{{ if .Cipher.Position }}<tr><td>Pozice</td><td><a href="https://mapy.cz/turisticka?vlastni-body&x={{ .Cipher.Position.Lon }}&y={{ .Cipher.Position.Lat }}&z=15">{{ .Cipher.Position.Point | latlon_human}}</a></td></tr>{{ end }}
+	{{ if .Cipher.File }}<tr><td>Stáhnout</td><td><a href="{{ $basedir }}/org/cipher/{{ .Cipher.ID }}/download">{{ .Cipher.File }}</a></td></tr>{{ end }}
+</table>
+</div>
+
+<div class="col-sm">
+<h3>Status řešení</h3>
+
+<table class="table table-sm">
+{{ if not .Found }}
+	<tr><td>Nalezená:</td><td>
+		❌ Ne
+		<form method="POST" class="float-right" onsubmit="return confirm('Opravdu označit jako nalezenou?');">
+			{{ .CSRF }}
+			<button name="submit" value="set-found" class="btn btn-sm btn-primary">Označit jako nalezenou</button>
+		</form>
+	</td></tr>
+{{ else }}
+	<tr><td>Nalezená</td><td>✅ {{ .CipherStatus.Arrival | timestamp }}</td></tr>
+	<tr><td>Vyřešená</td><td>{{ if .CipherStatus.Solved }}✅ {{ .CipherStatus.Solved | timestamp }}{{ else }}
+		❌ {{ if not .CipherStatus.Skip }}<form method="POST" class="float-right" onsubmit="return confirm('Opravdu označit jako vyřešenou?');">
+			{{ .CSRF }}
+			<button name="submit" value="set-solved" class="btn btn-sm btn-success">Označit jako vyřešenou</button>
+		</form>{{ end }}
+	{{ end }}</td></tr>
+	<tr><td>Nápověda</td><td>{{ if .CipherStatus.Hint }}vydaná {{ .CipherStatus.Hint | timestamp }}{{ else }}
+		nevydaná {{ if not (or .CipherStatus.Skip .CipherStatus.Solved) }}<form method="POST" class="float-right" onsubmit="return confirm('Opravdu označit jako že nápověda byla vydána? Pokud šifra obsahuje textovou nápovědu, tak se zobrazí účastníkům v jejich části systému.');">
+			{{ .CSRF }}
+			<button name="submit" value="set-hint" class="btn btn-sm btn-warning">Vydat nápovědu</button>
+		</form>{{ end }}
+	{{ end }}</td></tr>
+	<tr><td>Přeskočení</td><td>{{ if .CipherStatus.Skip }}přeskočeno {{ .CipherStatus.Skip | timestamp }}{{ else }}
+		nepřeskočeno {{ if not .CipherStatus.Solved }}<form method="POST" class="float-right" onsubmit="return confirm('Opravdu označit jako přeskočenou? Poté již nepůjde šifru vyřešit a v účastnické části systému se zobrazí text přeskočení.');">
+			{{ .CSRF }}
+			<button name="submit" value="set-skip" class="btn btn-sm btn-danger">Přeskočit šifru</button>
+		</form>{{ end }}
+	{{ end }}</td></tr>
+	<tr><td>Extra body</td><td>
+		<form method="POST">
+			{{ .CSRF }}
+			<input type="number" value="{{ .CipherStatus.ExtraPoints }}" name="extra-points">
+			<button name="submit" value="set-extra-points" class="btn btn-sm btn-primary">Nastavit</button>
+		</form>
+	</td></tr>
+	<tr><th class="hint" title="Včetně extra bodů">Získané body</th><th>{{ .CipherStatus.Points }}</th></tr>
+{{ end }}
+</table>
+
+</div>
+</div>
+
+<h3>Zprávy k této šifře</h3>
+
+<table class="table table-bordered table-striped" id="history">
+	<thead>
+		<tr><th>Čas</th><th>Zdroj</th><th>Zpráva od týmu</th><th>Odpověď</th></tr>
+	</thead>
+	<tbody>
+		{{ range .Messages}}
+		<tr>
+			<td>{{ .Time | timestamp_hint }}</td>
+			<td>{{ if .SMSID }}<a href="tel:{{ .PhoneNumber }}">{{ .PhoneNumber }}</a>{{ else }}{{ .PhoneNumber }}{{ end }}</td>
+			<td>{{ .Text }}</td>
+			<td>{{ .Response }}</td>
+		</tr>
+		{{ end }}
+	</tbody>
+</table>
+
+</main>
+
+</body>
+</html>
+{{ end }}

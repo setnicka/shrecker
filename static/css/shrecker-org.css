@@ -18,7 +18,7 @@ table#dashboard td, table#dashboard th {
 	text-align: center;
 	border: 1px #444444 solid;
 }
-table tr:nth-child(odd) {
+table#dashboard tbody tr:nth-child(odd) {
 	background-color: #ddd;
 }
 table#dashboard thead tr {
@@ -52,3 +52,19 @@ td.cipher-status .flex > span {
 td.cipher-status span.status-solved { background-color: #05C100; }
 td.cipher-status span.status-hint { background-color: yellow; }
 td.cipher-status span.status-skip { background-color: rgb(255, 98, 98); }
+td.cipher-status span.link a { color: blue; }
+
+label.toggle-label { cursor: pointer; }
+input.toggle-checkbox { display: none; }
+input.toggle-checkbox ~ .toggle-invisible {
+	visibility: hidden;
+	opacity: 0;
+	transition: opacity 0.5s;
+}
+input.toggle-checkbox:checked ~ .toggle-invisible { visibility: visible; opacity: 1; }
+input.toggle-checkbox ~ .toggle-hidden {
+	display: none;
+	opacity: 0;
+	transition: opacity 0.5s;
+}
+input.toggle-checkbox:checked ~ .toggle-hidden { display: block; opacity: 1; }

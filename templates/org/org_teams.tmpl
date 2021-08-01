@@ -1,0 +1,49 @@
+{{ define "org_teams" }}
+{{ template "part_head_start" . }}
+{{ template "part_head_end_org" . }}
+<body>
+{{ template "part_org_nav" . }}
+
+{{ $now := .Now }}
+{{ $basedir := .Basedir }}
+{{ $game := .GameConfig }}
+
+<main>
+<h2>Týmy</h2>
+
+{{ range .Teams}}
+<div class="team" id="team-{{ .Config.ID }}">
+	<a href="{{ $basedir }}/org/team/{{ .Config.ID }}" title="Detail týmu"><strong>{{ .Config.Name }}</strong></a>
+	(ID: <code>{{ .Config.ID }}</code>, login: <code>{{ .Config.Login }}</code>{{ if .Config.SMSCode }}, SMS kód: <code>{{ .Config.SMSCode }}</code>{{ end }})
+	{{ if and $game.IsOnline .Config.Members -}}
+		{{ $first := true }}
+		<a class="btn btn-secondary btn-sm" href="mailto:{{ range $name, $email := .Config.Members -}}
+			{{- if $first }}{{ $first = false }}{{ else }},{{ end -}}
+			%22{{ $name }}%22 %3C{{ $email }}%3E
+		{{- end }}?subject=Šifrovačka informace&amp;body=Login:{{ .Config.Login }}%0AHeslo:{{ .Config.Password }}">
+			Připravit email
+		</a>
+	{{ end -}}
+	<ul>
+		{{ if eq $game.OrderMode "points" }}<li>Získané body: <b>{{ .Points }}</b></li>{{ end }}
+		{{ if .Config.Jitsi }}<li>Jitsi meeting: <a target="_blank" href="https://meet.jit.si/{{ .Config.Jitsi }}"><code>{{ .Config.Jitsi }}</code></a></li>{{ end }}
+		{{ if .Config.Members -}}{{ $first := true -}}
+		<li>Členové: {{ range $name, $contact := .Config.Members -}}
+			{{- if $first }}{{ $first = false }}{{ else }}, {{ end -}}
+			{{ contact_link $name $contact }}
+		{{- end }}</li>
+		{{ end -}}
+		{{ if eq $game.Mode "online-map"}}<li>Cooldown: {{ if .Status.CooldownTo }}{{ if $now.Before .Status.CooldownTo }}{{ .Status.CooldownTo | timestamp }}{{ end }}{{ end }}</li>{{ end }}
+		{{ if .Locations }}
+		<li>Poslední pohyb: {{ .Status.LastMoved | timestamp }}</li>
+		<li>Trasa: <a href="{{ $basedir }}/org/team/{{ .Config.ID }}/gpx">[stáhnout gpx]</a></li>
+		{{ end }}
+	</ul>
+</div>
+{{ end }}
+
+</main>
+
+</body>
+</html>
+{{ end }}

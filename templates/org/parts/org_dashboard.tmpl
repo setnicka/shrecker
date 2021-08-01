@@ -7,7 +7,7 @@
 <div class="float-right" style="font-weight: bold;">
 {{ if .GameConfig.NotStarted $now }}Hra začíná v {{ .GameConfig.Start | timestamp }}
 {{- else if .GameConfig.Ended $now }}Hra skončila v {{ .GameConfig.End | timestamp }}
-{{- else if .GameConfig.End }}Hra končí v {{ .GameConfig.End | timestamp }}{{ end }}
+{{- else if .GameConfig.HasEnd }}Hra končí v {{ .GameConfig.End | timestamp }}{{ end }}
 </div>
 
 <h2>Stav hry</h2>
@@ -27,7 +27,9 @@
 	</tr></thead>
 	{{ range .Teams }}
 	<tr>
-		<th>{{ if $game.HasMap }}<a href="#" onclick="showPath('{{ .Config.ID }}'); return false;">{{ .Config.Name }}</a>{{ else }}<strong>{{ .Config.Name }}</strong>{{ end }}
+		<th>
+			<a href="{{ $basedir }}/org/team/{{ .Config.ID }}" title="Detail týmu">{{ .Config.Name }}</a>
+			{{ if $game.HasMap }}<br><a href="#" onclick="showPath('{{ .Config.ID }}'); return false;">🗺</a>{{ end }}
 			{{- if eq $game.OrderMode "points" }}<br>Bodů: {{ .Points }}{{ end -}}
 		</th>
 		{{- $team := . -}}
@@ -45,49 +47,17 @@
 						{{- if $status.ExtraPoints }} <small>(extra: {{ $status.ExtraPoints }})</small>{{ end -}}
 					{{ end -}}
 				</span>{{ end }}
+				<span class="link"><small><a href="{{ $basedir }}/org/team/{{ $team.Config.ID }}/cipher/{{ .ID }}">Detail šifry</a></small></span>
 			</div>
 			{{- end -}}
 			</td>
 			{{- else -}}
-			<td>-</td>
+			<td><span class="link"><a href="{{ $basedir }}/org/team/{{ $team.Config.ID }}/cipher/{{ .ID }}" title="Detail šifry">—</a></span></td>
 			{{ end }}
 		{{- end }}
 	</tr>
 	{{ end }}
 </table>
-
-<div id="team-list">
-	<h2>Týmy</h2>
-	{{ range .Teams}}
-		<div class="team" id="team-{{ .Config.ID }}">
-			{{ if $game.HasMap }}<a href="#" onclick="showPath('{{ .Config.ID }}'); return false;"><strong>{{ .Config.Name }}</strong></a>{{ else }}<strong>{{ .Config.Name }}</strong>{{ end }}
-			(ID: <code>{{ .Config.ID }}</code>, login: <code>{{ .Config.Login }}</code>)
-			{{ if and $game.IsOnline .Config.Members -}}
-				{{ $first := true }}
-				<a class="btn btn-secondary btn-sm" href="mailto:{{ range $name, $email := .Config.Members -}}
-					{{- if $first }}{{ $first = false }}{{ else }},{{ end -}}
-					%22{{ $name }}%22 %3C{{ $email }}%3E
-				{{- end }}?subject=Šifrovačka informace&amp;body=Login:{{ .Config.Login }}%0AHeslo:{{ .Config.Password }}">
-					Připravit email
-				</a>
-			{{ end -}}
-			<ul>
-				{{ if eq $game.OrderMode "points" }}<li>Získané body: <b>{{ .Points }}</b></li>{{ end }}
-				<li>Poslední pohyb: {{ .Status.LastMoved | timestamp }}</li>
-				{{ if .Config.Jitsi }}<li>Jitsi meeting: <a target="_blank" href="https://meet.jit.si/{{ .Config.Jitsi }}"><code>{{ .Config.Jitsi }}</code></a></li>{{ end }}
-				{{ if .Config.Members -}}{{ $first := true -}}
-				<li>Členové: {{ range $name, $contact := .Config.Members -}}
-					{{- if $first }}{{ $first = false }}{{ else }}, {{ end -}}
-					{{ contact_link $name $contact }}
-				{{- end }}</li>
-				{{ end -}}
-				{{ if eq $game.Mode "online-map"}}<li>Cooldown: {{ if .Status.CooldownTo }}{{ if $now.Before .Status.CooldownTo }}{{ .Status.CooldownTo | timestamp }}{{ end }}{{ end }}</li>{{ end }}
-				<li>Trasa: <a href="{{ $basedir }}org/team/{{ .Config.ID }}/gpx">[stáhnout gpx]</a></li>
-			</ul>
-		</div>
-	{{ end }}
-	</div>
-</div>
 
 <script type="text/javascript">
 // Hloupá pravidelná kontrola, jestli se něco změnilo

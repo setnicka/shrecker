@@ -17,6 +17,9 @@ func (c *CipherConfig) Discoverable(discoveredCiphers map[string]CipherStatus) b
 	if _, found := discoveredCiphers[c.ID]; found {
 		return true
 	}
+	if len(c.DependsOn) == 0 {
+		return true
+	}
 	// dependencies [ [a, b, c], [d, e], [f] ] means (a AND b AND c) OR (d AND e) OR (f)
 	for _, variant := range c.DependsOn {
 		variantPossible := true

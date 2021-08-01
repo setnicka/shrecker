@@ -164,7 +164,7 @@ func (g *Game) loadConfig(globalConfig *ini.File) error {
 		localCipher := cipher // to avoid linking all ciphers to the config of last one :) (cipher is for loop variable)
 		config.ciphersMap[cipher.ID] = &localCipher
 	}
-	// check that cipher are unique and depends_on exists
+	// check that cipher codes are unique, all texts are there and ciphers in depends_on and log_solved exists
 	codes := map[string]CipherConfig{}
 	for _, cipher := range config.ciphers {
 		if cipher.ArrivalCode != "" {
@@ -181,6 +181,9 @@ func (g *Game) loadConfig(globalConfig *ini.File) error {
 				return errors.Errorf("Config error: Ciphers '%s' and '%s' uses same code '%s'!", otherCipher.ID, cipher.ID, cipher.AdvanceCode)
 			}
 			codes[cipher.AdvanceCode] = cipher
+			if cipher.AdvanceText == "" {
+				return errors.Errorf("Config error: Cipher '%s' has advance_code but missing advance_text!", cipher.ID)
+			}
 		}
 		for _, variant := range cipher.DependsOn {
 			for _, d := range variant {

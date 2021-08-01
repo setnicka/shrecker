@@ -1,0 +1,38 @@
+{{ define "org_messages" }}
+{{ template "part_head_start" . }}
+{{ template "part_head_end_org" . }}
+<body>
+{{ template "part_org_nav" . }}
+
+{{ $basedir := .Basedir }}
+{{ $game := .GameConfig }}
+
+<main>
+<h2>Zprávy od všech týmů <small>({{ len .Messages}})</small></h2>
+
+<table class="table table-bordered table-striped" id="history">
+	<thead>
+		<tr><th>Čas</th><th>Zdroj</th><th>Tým</th><th>Šifra</th><th>Zpráva od vás</th><th>Odpověď</th></tr>
+	</thead>
+	<tbody>
+		{{ range .Messages}}
+		<tr>
+			<td>{{ .Time | timestamp_hint }}</td>
+			<td>{{ if .SMSID }}<a href="tel:{{ .PhoneNumber }}">{{ .PhoneNumber }}</a>{{ else }}{{ .PhoneNumber }}{{ end }}</td>
+			<td>{{ if .Team }}
+				{{ $t := index $.TeamsMap .Team }}
+				{{ if $t }}<a href="{{ $basedir }}/org/team/{{ .Team }}">{{ $t.Name }}</a>{{ else }}???{{ end }}
+			{{ end }}</td>
+			<td>{{ if .Cipher }}
+				{{ $c := index $.CiphersMap .Cipher }}
+				{{ if $c }}<a href="{{ $basedir }}/org/team/{{ .Team }}/cipher/{{ $c.ID }}">{{ $c.Name }}</a>{{ else }}???{{ end }}
+			{{ end }}</td>
+			<td>{{ .Text }}</td>
+			<td>{{ .Response }}</td>
+		</tr>
+		{{ end }}
+	</tbody>
+</table>
+
+
+{{ end }}

@@ -1,0 +1,65 @@
+{{ define "org_ciphers" }}
+{{ template "part_head_start" . }}
+{{ template "part_head_end_org" . }}
+<body>
+{{ template "part_org_nav" . }}
+
+{{ $basedir := .Basedir }}
+{{ $game := .GameConfig }}
+
+<main>
+<h2>Šifry</h2>
+
+{{ range .Ciphers }}
+<div class="row">
+<div class="col">
+<h4>{{ if .File }}<a title="Stáhnout" href="{{ $basedir }}/org/cipher/{{ .ID }}/download">{{ .Name }}</a>{{ else }}{{.Name}}{{ end }} <small>(ID: <code>{{ .ID }}</code>)</small></h4>
+<ul>
+	{{ if .NotCipher }}<li>Není šifra</li>{{ end }}
+	{{ if .DependsOn }}
+	{{ $multiple := gt (len .DependsOn) 1 }}
+	<li><span class="hint" title="Nutno objevit před objevením této šifry, při více variantách stačí splněná libovolná jedna z variant">Závislosti:</span>
+		<ul>
+		{{ range $i, $dep := .DependsOn }}
+			{{ if $multiple }}<li>Varianta {{$i}}: <ul>{{ end }}
+			{{ range $j, $cid := $dep -}}
+				{{- $cipher := index $.CiphersMap $cid -}}
+				<li>{{ $cipher.Name }}</li>
+			{{- end }}
+			{{ if $multiple }}</ul></li>{{ end }}
+		{{ end }}
+		</ul>
+	</li>
+	{{ end }}
+	{{ if .LogSolved }}
+	<li><span class="hint" title="Označit všechny tyto šifry za vyřešené když objeví tuto">Při objevení označ za vyřešené:</span>
+		<ul>
+		{{ range $cid := .LogSolved -}}
+			{{- $cipher := index $.CiphersMap $cid -}}
+			<li>{{ $cipher.Name }}</li>
+		{{- end }}
+		</ul>
+	</li>
+	{{ end }}
+	{{ if .ArrivalCode }}<li>Kód při příchodu: <code>{{ .ArrivalCode }}</code></li>{{ end }}
+	{{ if .ArrivalText }}<li>Příchodová zpráva: {{ .ArrivalText }}</li>{{ end }}
+	{{ if .AdvanceCode }}<li>Postupové heslo: <code>{{ .AdvanceCode }}</code></li>{{ end }}
+	{{ if .AdvanceText }}<li>Postupová zpráva: {{ .AdvanceText }}</li>{{ end }}
+	{{ if .HintText }}<li>Nápověda: {{ .HintText }}</li>{{ end }}
+	{{ if .SkipText }}<li>Přeskočení: {{ .SkipText }}</li>{{ end }}
+	{{ if .Position }}<li>Pozice: <a href="https://mapy.cz/turisticka?vlastni-body&x={{ .Position.Lon }}&y={{ .Position.Lat }}&z=15">{{ .Position.Point | latlon_human}}</a></li>{{ end }}
+</ul>
+</div>
+{{ if .ArrivalCode }}
+<div class="col">
+<figure class="figure">
+	<img class="figure-img" title="Kód při příchodu" src="{{ $basedir }}/org/qr-gen?text={{ call $.ArrivalLink . }}">
+	<figcaption class="figure-caption"><code>{{ call $.ArrivalLink . }}</code></figcaption>
+</figure>
+</div>
+{{ end }}
+</div>
+
+{{ end }}
+
+{{ end }}

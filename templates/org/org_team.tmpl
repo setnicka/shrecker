@@ -1,0 +1,132 @@
+{{ define "org_team" }}
+{{ template "part_head_start" . }}
+{{ template "part_head_end_org" . }}
+<body>
+{{ template "part_org_nav" . }}
+
+{{ $now := .Now }}
+{{ $basedir := .Basedir }}
+{{ $game := .GameConfig }}
+
+<main>
+<h2>Detail týmu {{ .Team.Config.Name }}</h2>
+
+<div class="row">
+
+<div class="col-sm">
+<h3>Konfigurace</h3>
+
+<table class="table table-sm">
+	<tr><td>ID</td><td><code>{{ .Team.Config.ID }}</code></td></tr>
+	{{ if .Team.Config.SMSCode }}
+	<tr><td>SMS kód</td><td><code>{{ .Team.Config.SMSCode }}</code></td></tr>
+	{{ end }}
+	<tr><td>Login</td><td><code>{{ .Team.Config.Login }}</code></td></tr>
+	<tr><td>Heslo</td><td>
+		<label class="toggle-label" for="password-toggle">👁</label>
+		<input class="toggle-checkbox" id="password-toggle" type="checkbox">
+		<code class="toggle-invisible">{{ .Team.Config.Password }}</code>
+		<img class="toggle-hidden" src="{{ $basedir }}/org/qr-gen?text={{ .TeamLoginLink }}" title="{{ .TeamLoginLink }}">
+	</td></tr>
+	{{ if .Team.Config.Jitsi }}
+	<tr><td>Jitsi meeting</td><td><a target="_blank" href="https://meet.jit.si/{{ .Config.Jitsi }}"><code>{{ .Config.Jitsi }}</code></a></td></tr>
+	{{ end }}
+	{{ if .Team.Config.Members -}}
+	<tr><td>Členové</td><td><ul>
+		{{ range $name, $contact := .Team.Config.Members -}}
+			<li>{{ contact_link $name $contact }}</li>
+		{{- end }}
+		</ul></td></tr>
+	{{ end -}}
+</table>
+</div>
+
+<div class="col-sm">
+<h3>Status</h3>
+
+<table class="table table-sm">
+	{{ if eq $game.OrderMode "points" }}<tr><td>Získané body</td><td><b>{{ .Team.Points }}</b></td></tr>{{ end }}
+	{{ if .Team.Locations }}
+	<tr><td>Záznam trasy</td><td>{{ len .Team.Locations }} bodů <a href="{{ $basedir }}/org/team/{{ .Team.Config.ID }}/gpx">[stáhnout gpx]</a></td></tr>
+	<tr><td>Poslední pohyb</td><td>{{ .Team.Status.LastMoved | timestamp }}</td></tr>
+	{{ end }}
+	{{ if eq $game.Mode "online-map"}}<tr><td>Cooldown</td><td>{{ if .Status.CooldownTo }}{{ if $now.Before .Status.CooldownTo }}{{ .Status.CooldownTo | timestamp }}{{ end }}{{ end }}</td></tr>{{ end }}
+
+</table>
+
+</div>
+</div>
+
+<h3>Šifry</h3>
+</main>
+
+<main class="wide">
+<table id="dashboard">
+	<thead class="thead-light"><tr>
+		{{- range .Ciphers -}}
+		<th>
+			{{ if .File }}<a href="{{ $basedir }}/org/cipher/{{ .ID }}/download">{{ .Name }}</a>{{ else }}{{ .Name }}{{ end }}
+			{{- if .HintText }}<span class="hint" title="{{ .HintText }}">[hint]</span>{{ end }}
+			{{- if .SkipText }}<span class="hint" title="{{ .SkipText }}">[skip]</span>{{ end }}
+		</th>
+		{{- end }}
+	</tr></thead>
+	<tr>
+		{{ range .Ciphers }}
+			{{- $status := index $.Team.Ciphers .ID -}}
+			{{ if not $status.Arrival.IsZero }}
+			<td class="cipher-status {{ if $status.Solved }}status-solved{{ else if $status.Arrival }}status-arrival{{ end }}">
+			{{- if not .NotCipher -}}
+			<div class="flex">
+				<span class="status-arrival">Příchod: {{ $status.Arrival | timestamp_hint }}</span>
+				{{ if $status.Hint }}<br><span class="status-hint">Hint: {{ $status.Hint | timestamp_hint }}</span>{{ end }}
+				{{ if $status.Skip }}<br><span class="status-skip">Skip: {{ $status.Skip | timestamp_hint }}</span>{{ end }}
+				{{ if $status.Solved }}<br><span class="status-solved">Postup: {{ $status.Solved | timestamp_hint }}
+					{{- if eq $game.OrderMode "points" }}<br>Bodů: <b>{{ $status.Points }}</b>
+						{{- if $status.ExtraPoints }} <small>(extra: {{ $status.ExtraPoints }})</small>{{ end -}}
+					{{ end -}}
+				</span>{{ end }}
+			</div>
+			{{- end -}}
+			</td>
+			{{- else -}}
+			<td>—</td>
+			{{ end }}
+		{{- end }}
+	</tr>
+	<tr>
+		{{ range .Ciphers }}
+		<td><a href="{{ $basedir }}/org/team/{{ $.Team.Config.ID }}/cipher/{{ .ID }}">Detaily</a></td>
+		{{ end }}
+	</tr>
+</table>
+</main>
+
+<main>
+<h3>Zprávy <small>({{ len .Team.Messages}})</small></h3>
+
+<table class="table table-bordered table-striped" id="history">
+	<thead>
+		<tr><th>Čas</th><th>Zdroj</th><th>Šifra</th><th>Zpráva od týmu</th><th>Odpověď</th></tr>
+	</thead>
+	<tbody>
+		{{ range .Team.Messages}}
+		<tr>
+			<td>{{ .Time | timestamp_hint }}</td>
+			<td>{{ if .SMSID }}<a href="tel:{{ .PhoneNumber }}">{{ .PhoneNumber }}</a>{{ else }}{{ .PhoneNumber }}{{ end }}</td>
+			<td>{{ if .Cipher }}
+				{{ $c := index $.CiphersMap .Cipher }}
+				{{ if $c }}<a href="{{ $basedir }}/org/team/{{ $.Team.Config.ID }}/cipher/{{ $c.ID }}">{{ $c.Name }}</a>{{ else }}???{{ end }}
+			{{ end }}</td>
+			<td>{{ .Text }}</td>
+			<td>{{ .Response }}</td>
+		</tr>
+		{{ end }}
+	</tbody>
+</table>
+
+</main>
+
+</body>
+</html>
+{{ end }}

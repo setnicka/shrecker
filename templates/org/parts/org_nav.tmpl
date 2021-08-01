@@ -3,7 +3,10 @@
 	<nav id="main-menu">
 		<h1><small>Shrecker</small> {{ .Title }}</h1>
 		<a href="{{ .Basedir }}/org/">Přehled</a>
-		<a href="{{ .Basedir }}/org/playback">Playback</a>
+		<a href="{{ .Basedir }}/org/teams">Týmy</a>
+		<a href="{{ .Basedir }}/org/ciphers">Šifry</a>
+		{{ if .GameConfig.HasMessages }}<a href="{{ .Basedir }}/org/messages">Zprávy</a>{{ end }}
+		{{ if .GameConfig.HasMap }}<a href="{{ .Basedir }}/org/playback">Playback</a>{{ end }}
 
 		<form class="right" method="POST" action="{{ .Basedir }}/logout">
 			{{ .CSRF }}

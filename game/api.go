@@ -42,6 +42,9 @@ func (g *Game) GetTeamTx(ctx context.Context, ID string) (*Team, *sqlxpp.Tx, *Co
 	return &Team{gameConfig: &gameConfig, tx: tx, teamConfig: team}, tx, &gameConfig, nil
 }
 
+// GetTeamsConfigMap returns team configuration in map by team ID
+func (c *Config) GetTeamsConfigMap() map[string]TeamConfig { return c.teams }
+
 // LoginTeam returns Team with given login and password or fails with ErrLogin
 // when login and password does not match any team.
 func (g *Game) LoginTeam(login, password string) (*Team, *Config, error) {
@@ -121,7 +124,7 @@ func (g *Game) GetAll(ctx context.Context, loadStatus, loadCiphers, loadLocation
 	}
 	if loadMessages {
 		messages := []Message{}
-		query, args, err := sqlx.In("SELECT * FROM messages WHERE team IN (?)", teamIDs)
+		query, args, err := sqlx.In("SELECT * FROM messages WHERE team IN (?) ORDER BY time DESC", teamIDs)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -137,4 +140,17 @@ func (g *Game) GetAll(ctx context.Context, loadStatus, loadCiphers, loadLocation
 	}
 
 	return teams, tx, &gameConfig, nil
+}
+
+// GetAllMessages returns messages from all teams in chronological order
+func (g *Game) GetAllMessages(ctx context.Context) ([]Message, *sqlxpp.Tx, *Config, error) {
+	gameConfig := g.GetConfig()
+	tx, err := g.db.BeginCtx(ctx)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	messages := []Message{}
+	err = tx.SelectE(&messages, "SELECT * FROM messages ORDER BY time DESC")
+	return messages, tx, &gameConfig, err
 }

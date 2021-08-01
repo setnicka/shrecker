@@ -42,6 +42,30 @@ func (g *Game) GetTeamTx(ctx context.Context, ID string) (*Team, *sqlxpp.Tx, *Co
 	return &Team{gameConfig: &gameConfig, tx: tx, teamConfig: team}, tx, &gameConfig, nil
 }
 
+// GetTeamByCode acts like GetTeamTx but searches team by SMS code
+func (g *Game) GetTeamByCode(ctx context.Context, SMSCode string) (*Team, *sqlxpp.Tx, *Config, error) {
+	gameConfig := g.GetConfig()
+	if SMSCode == "" {
+		return nil, nil, &gameConfig, ErrTeamNotFound
+	}
+	var team TeamConfig
+	found := false
+	for _, team = range gameConfig.teams {
+		if team.SMSCode == SMSCode {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return nil, nil, &gameConfig, ErrTeamNotFound
+	}
+	tx, err := g.db.BeginCtx(ctx)
+	if err != nil {
+		return nil, nil, &gameConfig, err
+	}
+	return &Team{gameConfig: &gameConfig, tx: tx, teamConfig: team}, tx, &gameConfig, nil
+}
+
 // GetTeamsConfigMap returns team configuration in map by team ID
 func (c *Config) GetTeamsConfigMap() map[string]TeamConfig { return c.teams }
 

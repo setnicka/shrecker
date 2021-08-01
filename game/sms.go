@@ -28,13 +28,17 @@ func (t *Team) ProcessMessage(text string, sender string, smsID int) (string, st
 		var msg Message
 		err := t.tx.Get(&msg, "SELECT * FROM messages WHERE sms_id=$1", smsID)
 		if err == nil || !errors.Is(err, sql.ErrNoRows) {
-			return "", "", errors.Errorf("SMS s tímto smsid již byla zpracována. Stalo se asi něco, co se nemělo stát. Kontaktujte organizátory!")
+			return "", "", errors.Errorf("SMS s tímto smsid již byla zpracována.")
 		}
 	}
 
 	action := actionArrive
 	parts := strings.SplitN(strings.TrimSpace(text), " ", 2)
 	code := strings.TrimSpace(strings.ToUpper(parts[0]))
+
+	if code == "" {
+		return "error", "Schází kód šifry", nil
+	}
 
 	log.Printf("Processing message '%s' from team %s with code '%s'", text, t.teamConfig.ID, code)
 

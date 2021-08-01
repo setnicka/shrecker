@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"path"
 	"sort"
@@ -444,4 +445,64 @@ func (s *Server) teamCipherDownload(w http.ResponseWriter, r *http.Request) {
 	// everything ok, serve file
 	w.Header().Set("Content-Disposition", fmt.Sprintf("filename=%s.pdf", cipher.ID))
 	http.ServeFile(w, r, path.Join(gameConfig.CiphersFolder, cipher.File))
+}
+
+func smsMessage(w http.ResponseWriter, msg string, a ...interface{}) {
+	w.Write([]byte(unaccent(fmt.Sprintf(msg, a...))))
+}
+
+func smsError(w http.ResponseWriter, err error) {
+	smsMessage(w, "Stalo se něco, co se stát nemělo, kontaktujte organizátory: %v", err)
+}
+
+func (s *Server) processSMS(w http.ResponseWriter, r *http.Request) {
+	if len(s.config.smsWhitelist) > 0 {
+		clientIP := net.ParseIP(r.RemoteAddr)
+		found := false
+		for _, ip := range s.config.smsWhitelist {
+			found = found || ip.Equal(clientIP)
+		}
+		if !found {
+			log.Errorf("Unauthorized message from IP %v", clientIP)
+			smsMessage(w, "CHYBA: IP %v není ve whitelistu", clientIP)
+			w.Write([]byte("Refused, IP not in whitelist"))
+			return
+		}
+	}
+
+	sender := "+" + r.URL.Query().Get("sender")
+	// keyword := r.URL.Query().Get("keyword")
+	identifier := r.URL.Query().Get("identifier")
+	text := r.URL.Query().Get("text")
+	smsID, err := strconv.Atoi(r.URL.Query().Get("smsid"))
+	if err != nil {
+		smsError(w, err)
+		return
+	}
+
+	// Try to find team
+	team, tx, _, err := s.game.GetTeamByCode(r.Context(), identifier)
+	if err == game.ErrTeamNotFound {
+		smsMessage(w, "Neznámý kód týmu %s, zkontrolujte prosim správnost", identifier)
+		return
+	}
+
+	respType, resp, err := team.ProcessMessage(text, sender, smsID)
+	if err != nil {
+		log.Errorf(err.Error())
+		smsError(w, err)
+		return
+	}
+	if err := tx.Commit(); err != nil {
+		log.Errorf(err.Error())
+		smsError(w, err)
+		return
+	}
+
+	resp = unaccent(stripHtmlTags(resp))
+	if respType == "error" {
+		resp = "Chyba: " + resp
+	}
+	log.Infof("Returned SMS: %s", resp)
+	smsMessage(w, resp)
 }

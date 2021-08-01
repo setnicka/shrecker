@@ -4,9 +4,15 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/setnicka/shrecker/game"
+	"golang.org/x/text/runes"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -61,4 +67,57 @@ func outputGPX(w http.ResponseWriter, r *http.Request, team game.TeamConfig, loc
 		fmt.Fprintf(w, "\t\t<trkpt lat='%f' lon='%f'><time>%s</time></trkpt>\n", location.Lat, location.Lon, location.Time.Format(time.RFC3339))
 	}
 	fmt.Fprintf(w, "\t</trkseg>\n</trk>\n</gpx>")
+}
+
+func unaccent(text string) string {
+	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
+	result, _, _ := transform.String(t, text)
+	return result
+}
+
+const (
+	htmlTagStart = 60 // Unicode `<`
+	htmlTagEnd   = 62 // Unicode `>`
+)
+
+// Aggressively strips HTML tags from a string.
+// It will only keep anything between `>` and `<`.
+func stripHtmlTags(s string) string {
+	// Setup a string builder and allocate enough memory for the new string.
+	var builder strings.Builder
+	builder.Grow(len(s) + utf8.UTFMax)
+
+	in := false // True if we are inside an HTML tag.
+	start := 0  // The index of the previous start tag character `<`
+	end := 0    // The index of the previous end tag character `>`
+
+	for i, c := range s {
+		// If this is the last character and we are not in an HTML tag, save it.
+		if (i+1) == len(s) && end >= start {
+			builder.WriteString(s[end:])
+		}
+
+		// Keep going if the character is not `<` or `>`
+		if c != htmlTagStart && c != htmlTagEnd {
+			continue
+		}
+
+		if c == htmlTagStart {
+			// Only update the start if we are not in a tag.
+			// This make sure we strip out `<<br>` not just `<br>`
+			if !in {
+				start = i
+			}
+			in = true
+
+			// Write the valid string between the close and start of the two tags.
+			builder.WriteString(s[end:start])
+			continue
+		}
+		// else c == htmlTagEnd
+		in = false
+		end = i + 1
+	}
+	s = builder.String()
+	return s
 }

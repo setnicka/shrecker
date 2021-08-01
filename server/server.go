@@ -23,20 +23,6 @@ type Server struct {
 	config       config
 }
 
-type config struct {
-	BaseURL       string `ini:"base_url"`
-	BaseDir       string `ini:"base_dir"`
-	StaticDir     string `ini:"static_dir"`
-	TemplateDir   string `ini:"template_dir"`
-	ListenAddress string `ini:"listen_address"`
-	SecureCookie  bool   `ini:"secure_cookie"`
-	CSRFKey       string `ini:"csrf_key"`
-	OrgLogin      string `ini:"org_login"`
-	OrgPassword   string `ini:"org_password"`
-	SessionSecret string `ini:"session_secret"`
-	SessionMaxAge int    `ini:"session_max_age"`
-}
-
 type contextKey int
 
 const (
@@ -62,6 +48,10 @@ func New(config *ini.File, game *game.Game) (*Server, error) {
 		return nil, err
 	}
 
+	if err := s.config.init(); err != nil {
+		return nil, err
+	}
+
 	// Setup cookie store
 	cookieStore := sessions.NewCookieStore([]byte(s.config.SessionSecret))
 	cookieStore.MaxAge(s.config.SessionMaxAge)
@@ -77,6 +67,7 @@ func (s *Server) Start() error {
 
 	r := chi.NewRouter()
 
+	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.CleanPath)
@@ -99,6 +90,10 @@ func (s *Server) Start() error {
 	r.Post("/login", s.teamLoginPost)
 	r.Post("/logout", s.logout)
 	r.Get("/quick-login", s.teamQuickLogin)
+
+	if s.config.SMSActive {
+		r.Get("/sms", s.processSMS)
+	}
 
 	// Org api - fail on unauthorized
 	r.Route("/org/api", func(r chi.Router) {

@@ -29,7 +29,7 @@
 				{{- $cipher := index $.CiphersMap $cid -}}
 				{{- $cipherStatus := index $.CiphersStatus $cid -}}
 				{{- if $first }}{{ $first = false }}{{ else }}, {{ end -}}
-				{{ if and $cipherStatus $cipherStatus.Solved }}✅{{ else }}❌{{ end }}
+				{{ if and $cipherStatus $cipherStatus.Solved }}✅{{ else if and $cipherStatus $cipherStatus.Skip }}⏩{{ else }}❌{{ end }}
 				<a href="{{ $basedir }}/org/team/{{ $.Team.ID }}/cipher/{{ $cid }}">{{ $cipher.Name }}</a>
 			{{- end }}
 			<br>
@@ -64,21 +64,22 @@
 	<tr><td>Vyřešená</td><td>{{ if .CipherStatus.Solved }}✅ {{ .CipherStatus.Solved | timestamp }}{{ else }}
 		❌ {{ if not .CipherStatus.Skip }}<form method="POST" class="float-right" onsubmit="return confirm('Opravdu označit jako vyřešenou?');">
 			{{ .CSRF }}
-			<button name="submit" value="set-solved" class="btn btn-sm btn-success">Označit jako vyřešenou</button>
+			<button name="submit" value="set-solved" class="btn btn-sm btn-success">✅ Označit jako vyřešenou</button>
 		</form>{{ end }}
 	{{ end }}</td></tr>
-	<tr><td>Nápověda</td><td>{{ if .CipherStatus.Hint }}vydaná {{ .CipherStatus.Hint | timestamp }}{{ else }}
+	<tr><td>Nápověda</td><td>{{ if .CipherStatus.Hint }}💡 vydaná {{ .CipherStatus.Hint | timestamp }}{{ else }}
 		nevydaná {{ if not (or .CipherStatus.Skip .CipherStatus.Solved) }}<form method="POST" class="float-right" onsubmit="return confirm('Opravdu označit jako že nápověda byla vydána? Pokud šifra obsahuje textovou nápovědu, tak se zobrazí účastníkům v jejich části systému.');">
 			{{ .CSRF }}
-			<button name="submit" value="set-hint" class="btn btn-sm btn-warning">Vydat nápovědu</button>
+			<button name="submit" value="set-hint" class="btn btn-sm btn-warning">💡 Vydat nápovědu</button>
 		</form>{{ end }}
 	{{ end }}</td></tr>
-	<tr><td>Přeskočení</td><td>{{ if .CipherStatus.Skip }}přeskočeno {{ .CipherStatus.Skip | timestamp }}{{ else }}
+	<tr><td>Přeskočení</td><td>{{ if .CipherStatus.Skip }}⏩ přeskočeno {{ .CipherStatus.Skip | timestamp }}{{ else }}
 		nepřeskočeno {{ if not .CipherStatus.Solved }}<form method="POST" class="float-right" onsubmit="return confirm('Opravdu označit jako přeskočenou? Poté již nepůjde šifru vyřešit a v účastnické části systému se zobrazí text přeskočení.');">
 			{{ .CSRF }}
-			<button name="submit" value="set-skip" class="btn btn-sm btn-danger">Přeskočit šifru</button>
+			<button name="submit" value="set-skip" class="btn btn-sm btn-danger">⏩ Přeskočit šifru</button>
 		</form>{{ end }}
 	{{ end }}</td></tr>
+	{{ if not .CipherStatus.Skip }}
 	<tr><td>Extra body</td><td>
 		<form method="POST">
 			{{ .CSRF }}
@@ -86,6 +87,7 @@
 			<button name="submit" value="set-extra-points" class="btn btn-sm btn-primary">Nastavit</button>
 		</form>
 	</td></tr>
+	{{ end }}
 	<tr><th class="hint" title="Včetně extra bodů">Získané body</th><th>{{ .CipherStatus.Points }}</th></tr>
 {{ end }}
 </table>
@@ -105,7 +107,7 @@
 			<td>{{ .Time | timestamp_hint }}</td>
 			<td>{{ if .SMSID }}<a href="tel:{{ .PhoneNumber }}">{{ .PhoneNumber }}</a>{{ else }}{{ .PhoneNumber }}{{ end }}</td>
 			<td>{{ .Text }}</td>
-			<td>{{ .Response }}</td>
+			<td>{{ .Response | safeHTML }}</td>
 		</tr>
 		{{ end }}
 	</tbody>

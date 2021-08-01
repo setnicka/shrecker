@@ -29,7 +29,7 @@
 	<tr>
 		<th>
 			<a href="{{ $basedir }}/org/team/{{ .Config.ID }}" title="Detail týmu">{{ .Config.Name }}</a>
-			{{ if $game.HasMap }}<br><a href="#" onclick="showPath('{{ .Config.ID }}'); return false;">🗺</a>{{ end }}
+			{{ if $game.HasMap }}<br><a href="#" onclick="showPath('{{ .Config.ID }}'); return false;"><small>zobrazit na mapě</small></a>{{ end }}
 			{{- if eq $game.OrderMode "points" }}<br>Bodů: {{ .Points }}{{ end -}}
 		</th>
 		{{- $team := . -}}

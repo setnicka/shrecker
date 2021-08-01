@@ -119,7 +119,7 @@
 				{{ if $c }}<a href="{{ $basedir }}/org/team/{{ $.Team.Config.ID }}/cipher/{{ $c.ID }}">{{ $c.Name }}</a>{{ else }}???{{ end }}
 			{{ end }}</td>
 			<td>{{ .Text }}</td>
-			<td>{{ .Response }}</td>
+			<td>{{ .Response | safeHTML }}</td>
 		</tr>
 		{{ end }}
 	</tbody>

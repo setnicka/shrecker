@@ -56,7 +56,7 @@ var team_paths = [];
 	team_markers[{{ .Config.ID }}] = L.marker({{ .Status.Point | latlon }}, {
 		title: "{{ .Config.Name }}",
 		icon: teamIcon,
-	}).bindPopup("Tým {{ .Config.Name }}").addTo(map).on('click', function() {
+	}).bindPopup("Tým {{ .Config.Name }}<br><a href='{{ $.Basedir }}/org/team/{{ .Config.ID }}'>(detail týmu)</a>").addTo(map).on('click', function() {
 		displayedPath = team_paths["{{ .Config.ID }}"];
 		displayedPath.addTo(map);
 	});

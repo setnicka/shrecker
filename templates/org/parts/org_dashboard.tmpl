@@ -22,6 +22,7 @@
 			{{ if .File }}<a href="{{ $basedir }}/org/cipher/{{ .ID }}/download">{{ .Name }}</a>{{ else }}{{ .Name }}{{ end }}
 			{{- if .HintText }}<span class="hint" title="{{ .HintText }}">[hint]</span>{{ end }}
 			{{- if .SkipText }}<span class="hint" title="{{ .SkipText }}">[skip]</span>{{ end }}
+			{{- if .AdvanceText }}<span class="hint" title="{{ .AdvanceText }}">[postup]</span>{{ end }}
 		</th>
 		{{- end }}
 	</tr></thead>

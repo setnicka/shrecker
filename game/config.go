@@ -61,20 +61,21 @@ type Config struct {
 
 // CipherConfig holds configuration of one cipher (parsed from JSON)
 type CipherConfig struct {
-	ID           string      `json:"id"`
-	NotCipher    bool        `json:"not_cipher"`           // used for PDF with game rules, ...
-	DependsOn    [][]string  `json:"depends_on,omitempty"` // IDs of ciphers that must be discovered before this one could be discovered ((a AND b AND c) OR (d AND e) OR (f))
-	LogSolved    []string    `json:"log_solved"`           // list of ciphers to log as solved when this one is discovered
-	StartVisible bool        `json:"start_visible"`        // Cipher is visible from start (online-map mode)
-	Name         string      `json:"name"`                 // Displayed name of the cipher
-	ArrivalCode  string      `json:"arrival_code"`         // code used on arrival
-	ArrivalText  string      `json:"arrival_text"`         // text displayed on the arrival
-	AdvanceCode  string      `json:"advance_code"`         // solution code deciphered from the cipher
-	AdvanceText  string      `json:"advance_text"`         // text displayed when correct advance code is entered
-	HintText     string      `json:"hint_text"`
-	SkipText     string      `json:"skip_text"`
-	Position     PointRadius `json:"position"`
-	File         string      `json:"file"`
+	ID           	string      `json:"id"`
+	NotCipher    	bool        `json:"not_cipher"`           // used for PDF with game rules, ...
+	DependsOn    	[][]string  `json:"depends_on,omitempty"` // IDs of ciphers that must be discovered before this one could be discovered ((a AND b AND c) OR (d AND e) OR (f))
+	LogSolved    	[]string    `json:"log_solved"`           // list of ciphers to log as solved when this one is discovered
+	SharedStandings	[]string	`json:"shared_standings"`      // Cipher has share stanging with another cipher (used when the standing is showed to team)
+	StartVisible 	bool        `json:"start_visible"`        // Cipher is visible from start (online-map mode)
+	Name         	string      `json:"name"`                 // Displayed name of the cipher
+	ArrivalCode  	string      `json:"arrival_code"`         // code used on arrival
+	ArrivalText  	string      `json:"arrival_text"`         // text displayed on the arrival
+	AdvanceCode  	string      `json:"advance_code"`         // solution code deciphered from the cipher
+	AdvanceText  	string      `json:"advance_text"`         // text displayed when correct advance code is entered
+	HintText     	string      `json:"hint_text"`
+	SkipText     	string      `json:"skip_text"`
+	Position     	PointRadius `json:"position"`
+	File         	string      `json:"file"`
 	// Messages    map[string]cipherMessage `json:messages`
 }
 
@@ -197,6 +198,11 @@ func (g *Game) loadConfig(globalConfig *ini.File) error {
 		for _, id := range cipher.LogSolved {
 			if _, found := config.ciphersMap[id]; !found {
 				return errors.Errorf("Config error: Cipher '%s' has ID '%s' in 'log_solved' field but cipher with this ID does not exists", cipher.ID, id)
+			}
+		}
+		for _, id := range cipher.SharedStanding {
+			if _, found := config.ciphersMap[id]; !found {
+				return errors.Errorf("Config error: Cipher '%s' has ID '%s' in 'shared_standing' field but cipher with this ID does not exists", cipher.ID, id)
 			}
 		}
 	}

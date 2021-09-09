@@ -127,17 +127,25 @@ func (t *Team) ProcessMessage(text string, sender string, smsID int) (string, st
 			return msg("success", "Správně! <b>%s</b>", cipher.AdvanceText)
 		} else {
 			t.LogCipherArrival(cipher)
-			order := 0
-			t.tx.Get(&order, "SELECT COUNT(team) FROM cipher_status WHERE cipher=$1", cipher.ID)
+
+			finalOrder := 0
+			ciphersToStandings := cipher.SharedStandings
+			ciphersToStandings = append(ciphersToStandings, cipher.ID)
+			for _, cipherID := range ciphersToStandings {
+				order := 0
+				t.tx.Get(&order, "SELECT COUNT(team) FROM cipher_status WHERE cipher=$1", cipherID)
+				finalOrder += order
+			}
+			
 			pickup := ""
-			if order == len(t.gameConfig.teams) {
+			if finalOrder == len(t.gameConfig.teams) {
 				pickup = " <b>(jste poslední, seberte ho prosím)</b>"
 			}
 			extra := ""
 			if cipher.ArrivalText != "" {
 				extra = " <b>" + cipher.ArrivalText + "</b>"
 			}
-			return msg("success", "Kód přijat, jste %d. na tomto stanovišti%s.%s", order, pickup, extra)
+			return msg("success", "Kód přijat, jste %d. na tomto stanovišti%s.%s", finalOrder, pickup, extra)
 		}
 	} else {
 		if action == actionHint {

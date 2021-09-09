@@ -200,9 +200,9 @@ func (g *Game) loadConfig(globalConfig *ini.File) error {
 				return errors.Errorf("Config error: Cipher '%s' has ID '%s' in 'log_solved' field but cipher with this ID does not exists", cipher.ID, id)
 			}
 		}
-		for _, id := range cipher.SharedStanding {
+		for _, id := range cipher.SharedStandings {
 			if _, found := config.ciphersMap[id]; !found {
-				return errors.Errorf("Config error: Cipher '%s' has ID '%s' in 'shared_standing' field but cipher with this ID does not exists", cipher.ID, id)
+				return errors.Errorf("Config error: Cipher '%s' has ID '%s' in 'shared_standings' field but cipher with this ID does not exists", cipher.ID, id)
 			}
 		}
 	}

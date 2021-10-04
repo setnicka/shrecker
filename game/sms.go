@@ -13,6 +13,7 @@ import (
 const (
 	codeSifricka = "SIFRICKA" // SIFRICKA <CODE1> <CODE2> <...>	- NOT IMPLEMENTED YET
 	codeHint     = "HINT"     // HINT <CODE> ...
+	codeHintAlt  = "HELP"     // HELP <CODE> ...
 	codeSkip     = "SKIP"     // SKIP <CODE> ...
 
 	actionHint    = codeHint
@@ -55,6 +56,10 @@ func (t *Team) ProcessMessage(text string, sender string, smsID int) (string, st
 	}
 
 	// 2. Split parts of message
+	if code == codeHintAlt {
+		code = codeHint
+	}
+
 	if code == codeHint || code == codeSkip {
 		if len(parts) == 1 {
 			return "error", "Neplatný tvar zprávy, schází kód stanoviště", nil

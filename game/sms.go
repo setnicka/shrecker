@@ -136,7 +136,7 @@ func (t *Team) ProcessMessage(text string, sender string, smsID int) (string, st
 				t.tx.Get(&order, "SELECT COUNT(team) FROM cipher_status WHERE cipher=$1", cipherID)
 				finalOrder += order
 			}
-			
+
 			pickup := ""
 			if finalOrder == len(t.gameConfig.teams) {
 				pickup = " <b>(jste poslední, seberte ho prosím)</b>"

@@ -217,15 +217,27 @@ func (g *Game) loadConfig(globalConfig *ini.File) error {
 	if err := json.Unmarshal(teamsBytes, &teamConfigs); err != nil {
 		return errors.Wrapf(err, "Cannot unmarshal JSON from file '%s'", teamsFile)
 	}
-	// create teams map and check that IDs are unique
+	// create teams map and check that IDs, logins and SMS codes are unique
 	config.teams = map[string]TeamConfig{}
 	config.teamHash = map[string]int{}
+	logins := map[string]string{}
+	smsCodes := map[string]string{}
 	for _, team := range teamConfigs {
 		if _, found := config.teams[team.ID]; found {
 			return errors.Errorf("Config error: Duplicit team ID '%s'!", team.ID)
 		}
 		config.teams[team.ID] = team
 		config.teamHash[team.ID] = rand.Int() // init with random hash to let know if something with the team changed
+
+		if otherID, found := logins[team.Login]; found {
+			return errors.Errorf("Config error: Teams '%s' and '%s' have same login '%s'!", team.ID, otherID, team.Login)
+		}
+		logins[team.Login] = team.ID
+
+		if otherID, found := smsCodes[team.SMSCode]; found {
+			return errors.Errorf("Config error: Teams '%s' and '%s' have same SMS code '%s'!", team.ID, otherID, team.SMSCode)
+		}
+		smsCodes[team.SMSCode] = team.ID
 	}
 
 	// Store config

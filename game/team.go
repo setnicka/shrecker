@@ -161,7 +161,7 @@ func (t *Team) LogCipherArrival(cipher CipherConfig) error {
 	for _, prevID := range cipher.LogSolved {
 		prevCipher := t.gameConfig.ciphersMap[prevID]
 		prevCipherStatus := t.cipherStatus[prevID]
-	    _, found := t.cipherStatus[prevID]
+		_, found := t.cipherStatus[prevID]
 		if prevCipherStatus.Solved == nil && prevCipherStatus.Skip == nil && found {
 			if err := t.LogCipherSolved(prevCipher); err != nil {
 				return err
@@ -169,7 +169,7 @@ func (t *Team) LogCipherArrival(cipher CipherConfig) error {
 		}
 	}
 
-	if t.gameConfig.AutologPosition {
+	if t.gameConfig.AutologPosition && !cipher.Position.Point.IsZero() {
 		return t.LogPosition(cipher.Position.Point)
 	}
 	return nil

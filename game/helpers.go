@@ -31,6 +31,11 @@ func (p *Point) Distance(q Point) (distance float64) {
 	return c * earthRadius
 }
 
+// Check if the point is zero
+func (p *Point) IsZero() bool {
+	return p.Lat == 0 && p.Lon == 0
+}
+
 // InRadius tests if given pos is in radius of this Point
 func (p *PointRadius) InRadius(pos Point) bool {
 	return p.Distance(pos) <= float64(p.Radius)

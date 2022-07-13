@@ -52,17 +52,18 @@ var team_markers = [];
 var team_positions = [];
 var team_paths = [];
 {{ range .Teams }}
-	team_positions[{{ .Config.ID }}] = {{ .Status.Point | latlon }};
-	team_markers[{{ .Config.ID }}] = L.marker({{ .Status.Point | latlon }}, {
-		title: "{{ .Config.Name }}",
-		icon: teamIcon,
-	}).bindPopup("Tým {{ .Config.Name }}<br><a href='{{ $.Basedir }}/org/team/{{ .Config.ID }}'>(detail týmu)</a>").addTo(map).on('click', function() {
-		displayedPath = team_paths["{{ .Config.ID }}"];
-		displayedPath.addTo(map);
-	});
-	team_paths[{{ .Config.ID }}] = L.polyline([{{- range .Locations }}{{ .Point | latlon }}, {{ end -}}], {color: 'blue'});
-
-{{ end}}
+	{{ if .Status }}
+		team_positions[{{ .Config.ID }}] = {{ .Status.Point | latlon }};
+		team_markers[{{ .Config.ID }}] = L.marker({{ .Status.Point | latlon }}, {
+			title: "{{ .Config.Name }}",
+			icon: teamIcon,
+		}).bindPopup("Tým {{ .Config.Name }}<br><a href='{{ $.Basedir }}/org/team/{{ .Config.ID }}'>(detail týmu)</a>").addTo(map).on('click', function() {
+			displayedPath = team_paths["{{ .Config.ID }}"];
+			displayedPath.addTo(map);
+		});
+		team_paths[{{ .Config.ID }}] = L.polyline([{{- range .Locations }}{{ .Point | latlon }}, {{ end -}}], {color: 'blue'});
+	{{ end }}
+{{ end }}
 
 map.on('popupclose', function(e) {
 	if (displayedPath) displayedPath.remove();

@@ -47,7 +47,7 @@
 	{{ if .AdvanceText }}<li>Postupová zpráva: {{ .AdvanceText }}</li>{{ end }}
 	{{ if .HintText }}<li>Nápověda: {{ .HintText }}</li>{{ end }}
 	{{ if .SkipText }}<li>Přeskočení: {{ .SkipText }}</li>{{ end }}
-	{{ if .Position }}<li>Pozice: <a href="https://mapy.cz/turisticka?vlastni-body&x={{ .Position.Lon }}&y={{ .Position.Lat }}&z=15">{{ .Position.Point | latlon_human}}</a></li>{{ end }}
+	{{ if and .Position (not .Position.Point.IsZero) }}<li>Pozice: <a href="https://mapy.cz/turisticka?vlastni-body&x={{ .Position.Lon }}&y={{ .Position.Lat }}&z=15">{{ .Position.Point | latlon_human}}</a></li>{{ end }}
 </ul>
 </div>
 {{ if .ArrivalCode }}

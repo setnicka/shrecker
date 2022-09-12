@@ -82,7 +82,7 @@ const (
 
 // Aggressively strips HTML tags from a string.
 // It will only keep anything between `>` and `<`.
-func stripHtmlTags(s string) string {
+func stripHTMLTags(s string) string {
 	// Setup a string builder and allocate enough memory for the new string.
 	var builder strings.Builder
 	builder.Grow(len(s) + utf8.UTFMax)
@@ -92,11 +92,6 @@ func stripHtmlTags(s string) string {
 	end := 0    // The index of the previous end tag character `>`
 
 	for i, c := range s {
-		// If this is the last character and we are not in an HTML tag, save it.
-		if (i+1) == len(s) && end >= start {
-			builder.WriteString(s[end:])
-		}
-
 		// Keep going if the character is not `<` or `>`
 		if c != htmlTagStart && c != htmlTagEnd {
 			continue
@@ -118,6 +113,11 @@ func stripHtmlTags(s string) string {
 		in = false
 		end = i + 1
 	}
+	// After the last character and we are not in an HTML tag, save it.
+	if end >= start {
+		builder.WriteString(s[end:])
+	}
+
 	s = builder.String()
 	return s
 }

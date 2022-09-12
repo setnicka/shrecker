@@ -499,7 +499,7 @@ func (s *Server) processSMS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp = unaccent(stripHtmlTags(resp))
+	resp = unaccent(stripHTMLTags(resp))
 	if respType == "error" {
 		resp = "Chyba: " + resp
 	}

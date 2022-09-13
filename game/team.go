@@ -74,6 +74,52 @@ func (t *Team) GetMessages() ([]Message, error) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// TeamStats holds statistics about ciphers of given team
+type TeamStats struct {
+	FoundCiphers      int
+	SolvedCiphers     int
+	FoundMiniCiphers  int
+	SolvedMiniCiphers int
+	FoundSimple       int
+	UsedHints         int
+	UsedSkips         int
+}
+
+// GetStats computes statistics about ciphers based on cipher statuses from the DB
+func (t *Team) GetStats() (TeamStats, error) {
+	statuses, err := t.GetCipherStatus()
+	if err != nil {
+		return TeamStats{}, err
+	}
+	stats := TeamStats{}
+	for _, cipher := range t.gameConfig.ciphers {
+		status, found := statuses[cipher.ID]
+		if !found {
+			continue
+		}
+		if cipher.Type == Cipher {
+			stats.FoundCiphers++
+			if status.Solved != nil {
+				stats.SolvedCiphers++
+			}
+		} else if cipher.Type == MiniCipher {
+			stats.FoundMiniCiphers++
+			if status.Solved != nil {
+				stats.SolvedMiniCiphers++
+			}
+		} else {
+			stats.FoundSimple++
+		}
+		if status.Hint != nil {
+			stats.UsedHints++
+		}
+		if status.Skip != nil {
+			stats.UsedSkips++
+		}
+	}
+	return stats, nil
+}
+
 // SumPoints runs through all ciphers and sum points for them
 func (t *Team) SumPoints() (int, error) {
 	if _, err := t.GetCipherStatus(); err != nil {

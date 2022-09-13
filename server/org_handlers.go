@@ -71,6 +71,7 @@ type teamInfo struct {
 	Config    *game.TeamConfig
 	Status    *game.TeamStatus
 	Points    int
+	Stats     game.TeamStats
 	Locations []game.TeamLocationEntry
 	Ciphers   map[string]game.CipherStatus
 	Messages  []game.Message
@@ -88,10 +89,12 @@ func (s *Server) getTeamInfos(ctx context.Context) ([]teamInfo, *game.Config, er
 		ciphers, _ := team.GetCipherStatus()
 		locations, _ := team.GetLocations()
 		points, _ := team.SumPoints()
+		stats, _ := team.GetStats()
 		teamInfos = append(teamInfos, teamInfo{
 			Config:    team.GetConfig(),
 			Status:    status,
 			Points:    points,
+			Stats:     stats,
 			Locations: locations,
 			Ciphers:   ciphers,
 		})
@@ -108,7 +111,7 @@ type orgTeamsData struct {
 	GameConfig *game.Config
 	GameHash   int
 	Teams      []teamInfo
-	Ciphers    []game.CipherConfig
+	Ciphers    game.CiphersSplitted
 }
 
 func (s *Server) orgIndex(w http.ResponseWriter, r *http.Request) {
@@ -127,7 +130,7 @@ func (s *Server) orgIndex(w http.ResponseWriter, r *http.Request) {
 			GameConfig:  gameConfig,
 			GameHash:    gameConfig.GetGameHash(),
 			Teams:       teamInfos,
-			Ciphers:     gameConfig.GetCiphers(),
+			Ciphers:     gameConfig.GetCiphersByType(),
 		},
 	)
 }
@@ -144,7 +147,7 @@ func (s *Server) orgTeams(w http.ResponseWriter, r *http.Request) {
 			GameConfig:  gameConfig,
 			GameHash:    gameConfig.GetGameHash(),
 			Teams:       teamInfos,
-			Ciphers:     gameConfig.GetCiphers(),
+			Ciphers:     gameConfig.GetCiphersByType(),
 		},
 	)
 }
@@ -175,7 +178,7 @@ func (s *Server) orgPlayback(w http.ResponseWriter, r *http.Request) {
 			GeneralData: s.getGeneralData("Playback", w, r),
 			GameConfig:  gameConfig,
 			Teams:       teamInfos,
-			Ciphers:     gameConfig.GetCiphers(),
+			Ciphers:     gameConfig.GetCiphersByType(),
 		},
 	)
 }
@@ -185,7 +188,7 @@ type orgTeamData struct {
 	GameConfig    *game.Config
 	Team          teamInfo
 	TeamLoginLink string
-	Ciphers       []game.CipherConfig
+	Ciphers       game.CiphersSplitted
 	CiphersMap    map[string]*game.CipherConfig
 }
 
@@ -210,6 +213,10 @@ func (s *Server) orgTeam(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+	teamStats, err := team.GetStats()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 	teamLocations, err := team.GetLocations()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -226,13 +233,14 @@ func (s *Server) orgTeam(w http.ResponseWriter, r *http.Request) {
 		w, "org_team", orgTeamData{
 			GeneralData: s.getGeneralData("Tým", w, r),
 			GameConfig:  gameConfig,
-			Ciphers:     gameConfig.GetCiphers(),
+			Ciphers:     gameConfig.GetCiphersByType(),
 			CiphersMap:  gameConfig.GetCiphersMap(),
 			Team: teamInfo{
 				Config:    teamConfig,
 				Ciphers:   teamCiphers,
 				Status:    teamStatus,
 				Points:    teamPoints,
+				Stats:     teamStats,
 				Locations: teamLocations,
 				Messages:  teamMessages,
 			},

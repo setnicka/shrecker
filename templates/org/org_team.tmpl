@@ -51,31 +51,73 @@
 	<tr><td>Poslední pohyb</td><td>{{ .Team.Status.LastMoved | timestamp }}</td></tr>
 	{{ end }}
 	{{ if eq $game.Mode "online-map"}}<tr><td>Cooldown</td><td>{{ if .Status.CooldownTo }}{{ if $now.Before .Status.CooldownTo }}{{ .Status.CooldownTo | timestamp }}{{ end }}{{ end }}</td></tr>{{ end }}
-
+	<tr><td>Použito nápověd</td><td>{{ .Team.Stats.UsedHints }}</td></tr>
+	<tr><td>Použito přeskočení</td><td>{{ .Team.Stats.UsedSkips }}</td></tr>
 </table>
 
 </div>
 </div>
 
-<h3>Šifry</h3>
+{{ if .Ciphers.Ciphers }}
+<h3>Šifry <small>({{ .Team.Stats.FoundCiphers }}/{{ len .Ciphers.Ciphers }} nalezeno, {{ .Team.Stats.SolvedCiphers }}/{{ len .Ciphers.Ciphers }} vyřešeno)</small></h3>
 </main>
 
 <main class="wide">
 <table id="dashboard">
 <thead class="thead-light"><tr>
-	{{ template "org_table_header" dict "Ciphers" .Ciphers}}
+	{{ template "org_table_header" dict "Ciphers" .Ciphers.Ciphers}}
 </tr></thead>
 <tr>
-	{{ template "org_table_row" dict "Ciphers" .Ciphers "Game" .GameConfig "Team" .Team "Type" "single" }}
+	{{ template "org_table_row" dict "Ciphers" .Ciphers.Ciphers "Game" .GameConfig "Team" .Team "Type" "single" }}
 </tr><tr>
-	{{ range .Ciphers }}
+	{{ range .Ciphers.Ciphers }}
 	<td><a href="{{ basedir }}/org/team/{{ $.Team.Config.ID }}/cipher/{{ .ID }}">Detaily</a></td>
 	{{- end }}
 </tr>
 </table>
 </main>
-
 <main>
+{{ end }}
+
+{{ if .Ciphers.MiniCiphers }}
+<h3>Šifřičky <small>({{ .Team.Stats.FoundMiniCiphers }}/{{ len .Ciphers.MiniCiphers }} nalezeno, {{ .Team.Stats.SolvedMiniCiphers }}/{{ len .Ciphers.MiniCiphers }} vyřešeno)</small></h3>
+</main>
+
+<main class="wide">
+<table id="dashboard">
+<thead class="thead-light"><tr>
+	{{ template "org_table_header" dict "Ciphers" .Ciphers.MiniCiphers}}
+</tr></thead>
+<tr>
+	{{ template "org_table_row" dict "Ciphers" .Ciphers.MiniCiphers "Game" .GameConfig "Team" .Team "Type" "single" }}
+</tr><tr>
+	{{ range .Ciphers.MiniCiphers }}
+	<td><a href="{{ basedir }}/org/team/{{ $.Team.Config.ID }}/cipher/{{ .ID }}">Detaily</a></td>
+	{{- end }}
+</tr>
+</table>
+</main>
+<main>
+{{ end }}
+
+{{ if .Ciphers.Simple }}
+<h3>Stanoviště <small>({{ .Team.Stats.FoundSimple }}/{{ len .Ciphers.Simple }} nalezeno)</small></h3>
+<div class="cipher-simple-wrap">
+{{ range .Ciphers.Simple }}
+	{{- $status := index $.Team.Ciphers .ID -}}
+	<div class="cipher-simple{{ if not $status.Arrival.IsZero }} found{{ end }}">
+		<div class="title">{{ if .File }}<a title="Stáhnout" href="{{ basedir }}/org/cipher/{{ .ID }}/download">{{ .Name }}</a>{{ else }}{{ .Name }}{{ end }}</div>
+		<div class="body">
+			<a title="Detail" href="{{ basedir }}/org/team/{{ $.Team.Config.ID }}/cipher/{{ .ID }}">
+			{{ if not $status.Arrival.IsZero }}<span class="status-arrival" title="Čas příchodu">{{ $status.Arrival | timestamp_hint }}</span>
+			{{else}}—{{ end }}
+			</a>
+		</div>
+	</div>
+{{ end }}
+</div><br>
+{{ end }}
+
 <h3>Zprávy <small>({{ len .Team.Messages}})</small></h3>
 
 <table class="table table-bordered table-striped" id="history">

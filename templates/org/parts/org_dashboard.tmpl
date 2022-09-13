@@ -15,18 +15,36 @@
 {{ template "part_messageBox" . }}
 
 <table id="dashboard" class="full">
-<thead class="thead-light"><tr>
-	<th>Tým</th>
-	{{ template "org_table_header" dict "Ciphers" .Ciphers }}
-</tr></thead>
+<thead class="thead-light">
+	<tr>
+		<th rowspan="2">Tým</th>
+		{{- if .Ciphers.Simple }}<th rowspan="2">Sebraná<br>stanoviště</th>{{ end -}}
+		{{- if .Ciphers.MiniCiphers }}<th colspan="{{ len .Ciphers.MiniCiphers }}">Šifřičky</th>{{ end -}}
+		{{- if .Ciphers.Ciphers }}<th colspan="{{ len .Ciphers.Ciphers }}">Šifry</th>{{ end -}}
+	</tr>
+	<tr>
+		{{ template "org_table_header" dict "Ciphers" .Ciphers.MiniCiphers }}
+		{{ template "org_table_header" dict "Ciphers" .Ciphers.Ciphers }}
+	</tr>
+</thead>
 {{ range .Teams }}
 	<tr>
 		<th>
 			<a href="{{ basedir }}/org/team/{{ .Config.ID }}" title="Detail týmu">{{ .Config.Name }}</a>
 			{{ if $.GameConfig.HasMap }}<br><a href="#" onclick="showPath('{{ .Config.ID }}'); return false;"><small>zobrazit na mapě</small></a>{{ end }}
+			<small>
 			{{- if eq $.GameConfig.OrderMode "points" }}<br>Bodů: {{ .Points }}{{ end -}}
+			{{ if $.Ciphers.Ciphers }}<br>Šifer: {{ .Stats.SolvedCiphers }}/{{ .Stats.FoundCiphers }} z {{ len $.Ciphers.Ciphers }}{{ end }}
+			{{ if $.Ciphers.MiniCiphers }}<br>Šifřiček: {{ .Stats.SolvedMiniCiphers }}/{{ .Stats.FoundMiniCiphers }} z {{ len $.Ciphers.MiniCiphers }}{{ end }}
+			<br>Nápověd: {{ .Stats.UsedHints }}
+			<br>Přeskočení: {{ .Stats.UsedSkips }}
+			</small>
 		</th>
-		{{ template "org_table_row" dict "Ciphers" $.Ciphers "Game" $.GameConfig "Team" . "Type" "dashboard" }}
+		{{ if $.Ciphers.Simple -}}
+			<th>{{ .Stats.FoundSimple }} / {{ len $.Ciphers.Simple }}</th>
+		{{- end }}
+		{{ template "org_table_row" dict "Ciphers" $.Ciphers.MiniCiphers "Game" $.GameConfig "Team" . "Type" "dashboard" }}
+		{{ template "org_table_row" dict "Ciphers" $.Ciphers.Ciphers "Game" $.GameConfig "Team" . "Type" "dashboard" }}
 	</tr>
 {{ end }}
 </table>

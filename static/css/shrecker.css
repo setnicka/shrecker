@@ -101,29 +101,47 @@ input.btn:disabled {
 	overflow-y: scroll;
 }
 
+#team-status {
+	color: white;
+	background-color: #444444;
+}
+
+#team-status ul {
+	padding: 0px;
+	list-style-position: inside;
+	list-style: none;
+}
+
+.panel {
+	margin-bottom: 20px;
+}
+
 h2 {
 	font-variant: small-caps;
 }
 
-#cipher-list .cipher {
+.cipher-list .cipher {
 	border: 1px #aaa solid;
 	border-radius: 3px;
 	padding: 3px 5px;
 	margin-bottom: 2px;
 }
-#cipher-list .cipher.solved {
+.cipher-list .cipher.solved {
 	background-color: rgb(169, 241, 169);
 }
-#cipher-list .cipher.skip {
+.cipher-list .cipher.skip {
 	background-color: rgb(255, 193, 193);
 }
-#cipher-list .cipher.highlight {
+.cipher-list .cipher.highlight {
 	background-color: rgb(238, 238, 187);
 	transition: 1s;
 }
-#cipher-list .cipher ul {
+.cipher-list .cipher .title {
+
+}
+.cipher-list .cipher ul {
 	list-style-position: inside;
-	list-style-type: square;
+	list-style-type: none;
 	padding-left: 0px;
 	margin: 0px;
 }
@@ -136,4 +154,25 @@ h2 {
 
 .hintX {
 	cursor: help;
+}
+
+.cipher-simple-wrap {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	gap: 2px;
+	justify-content: center;
+	width: 100%;
+}
+.cipher-simple {
+	border: 1px #aaa solid;
+	border-radius: 3px;
+	min-width: 100px;
+	text-align: center;
+}
+.cipher-simple.found {
+	background-color: rgb(169, 241, 169);
+}
+.cipher-simple .title {
+	font-weight: bold;
 }

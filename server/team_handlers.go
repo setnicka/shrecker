@@ -141,12 +141,15 @@ func (s *Server) teamLoginPost(w http.ResponseWriter, r *http.Request) {
 
 type teamIndexData struct {
 	teamGeneralData
-	TeamStatus *game.TeamStatus
-	TeamPoints int
-	TeamHash   int
-	Ciphers    []game.CipherStatus
-	Locations  []game.TeamLocationEntry
-	Messages   []game.Message
+	TeamStatus    *game.TeamStatus
+	TeamPoints    int
+	TeamStats     game.TeamStats
+	TeamHash      int
+	Ciphers       []game.CipherStatus
+	CiphersMini   []game.CipherStatus
+	CiphersSimple []game.CipherStatus
+	Locations     []game.TeamLocationEntry
+	Messages      []game.Message
 }
 
 func (s *Server) teamHash(w http.ResponseWriter, r *http.Request) {
@@ -171,9 +174,17 @@ func (s *Server) teamIndex(w http.ResponseWriter, r *http.Request) {
 	}
 	// order by cipher configuration in game but in reverse order
 	ciphers := []game.CipherStatus{}
+	ciphersMini := []game.CipherStatus{}
+	ciphersSimple := []game.CipherStatus{}
 	for _, cipher := range gameConfig.GetCiphers() {
 		if cs, found := cipherStatus[cipher.ID]; found {
-			ciphers = append([]game.CipherStatus{cs}, ciphers...)
+			if cipher.Type == game.Cipher {
+				ciphers = append([]game.CipherStatus{cs}, ciphers...)
+			} else if cipher.Type == game.MiniCipher {
+				ciphersMini = append([]game.CipherStatus{cs}, ciphersMini...)
+			} else {
+				ciphersSimple = append([]game.CipherStatus{cs}, ciphersSimple...)
+			}
 		}
 	}
 
@@ -300,6 +311,13 @@ func (s *Server) teamIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	stats, err := team.GetStats()
+	if err != nil {
+		log.Errorf("Cannot get team stats: %+v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	templateName := "team_index"
 	title := "Šifrovačka – webový systém"
 	if gameConfig.Mode == game.GameOnlineMap {
@@ -312,8 +330,11 @@ func (s *Server) teamIndex(w http.ResponseWriter, r *http.Request) {
 			teamGeneralData: s.getTeamGeneralData(title, w, r),
 			TeamStatus:      status,
 			TeamPoints:      points,
+			TeamStats:       stats,
 			TeamHash:        team.GetHash(),
 			Ciphers:         ciphers,
+			CiphersMini:     ciphersMini,
+			CiphersSimple:   ciphersSimple,
 			Locations:       locations,
 			Messages:        messages,
 		},

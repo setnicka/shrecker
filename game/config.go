@@ -14,6 +14,7 @@ import (
 
 type gameMode string
 type orderMode string
+type cipherType string
 
 // Modes of the game
 const (
@@ -27,6 +28,31 @@ const (
 const (
 	OrderPoints orderMode = "points"
 )
+
+// Cipher types
+const (
+	Cipher     cipherType = "cipher"      // normal cipher with all features
+	MiniCipher cipherType = "mini-cipher" // special type of cipher with less requirements (no need for advance text, ...), is counted in a special counter for mini ciphers
+	Simple     cipherType = "simple"      // has only arrival code, no hints, skips, ...
+)
+
+func (ct *cipherType) UnmarshalJSON(data []byte) (err error) {
+	var ctp string
+	if err := json.Unmarshal(data, &ctp); err != nil {
+		return err
+	}
+	switch cipherType(ctp) {
+	case Cipher, "":
+		*ct = Cipher
+	case MiniCipher:
+		*ct = MiniCipher
+	case Simple:
+		*ct = Simple
+	default:
+		return errors.Errorf("unknown cipher type '%s'", ctp)
+	}
+	return nil
+}
 
 // Config holds parsed game configuration from the ini file
 type Config struct {
@@ -65,6 +91,7 @@ type Config struct {
 // CipherConfig holds configuration of one cipher (parsed from JSON)
 type CipherConfig struct {
 	ID              string      `json:"id"`
+	Type            cipherType  `json:"type"`
 	NotCipher       bool        `json:"not_cipher"`           // used for PDF with game rules, ...
 	DependsOn       [][]string  `json:"depends_on,omitempty"` // IDs of ciphers that must be discovered before this one could be discovered ((a AND b AND c) OR (d AND e) OR (f))
 	LogSolved       []string    `json:"log_solved"`           // list of ciphers to log as solved when this one is discovered
@@ -176,16 +203,25 @@ func (c *Config) loadCiphers(ciphersFile string) error {
 	}
 	// create ciphers map and check that IDs are unique
 	c.ciphersMap = map[string]*CipherConfig{}
-	for _, cipher := range c.ciphers {
+	for i := range c.ciphers {
+		cipher := &c.ciphers[i]
 		if _, found := c.ciphersMap[cipher.ID]; found {
 			return errors.Errorf("Config error: Duplicit cipher ID '%s'!", cipher.ID)
 		}
-		localCipher := cipher // to avoid linking all ciphers to the config of last one :) (cipher is for loop variable)
-		c.ciphersMap[cipher.ID] = &localCipher
+		if cipher.Type == "" {
+			cipher.Type = Cipher
+		}
+		c.ciphersMap[cipher.ID] = cipher
 	}
 	// check that cipher codes are unique, all texts are there and ciphers in depends_on and log_solved exists
 	codes := map[string]CipherConfig{}
 	for _, cipher := range c.ciphers {
+		if cipher.Type == Simple {
+			if cipher.AdvanceCode != "" || cipher.HintText != "" || cipher.SkipText != "" {
+				return errors.Errorf("Config error: Cipher '%s' could not have hint, skip or advance code (because its type is 'simple')!", cipher.ID)
+			}
+		}
+
 		if cipher.ArrivalCode != "" {
 			if cipher.ArrivalCode == cipher.AdvanceCode {
 				return errors.Errorf("Config error: Cipher '%s' has same arrival and advance codes '%s'!", cipher.ID, cipher.ArrivalCode)
@@ -200,7 +236,7 @@ func (c *Config) loadCiphers(ciphersFile string) error {
 				return errors.Errorf("Config error: Ciphers '%s' and '%s' uses same code '%s'!", otherCipher.ID, cipher.ID, cipher.AdvanceCode)
 			}
 			codes[cipher.AdvanceCode] = cipher
-			if cipher.AdvanceText == "" {
+			if cipher.AdvanceText == "" && cipher.Type != MiniCipher {
 				return errors.Errorf("Config error: Cipher '%s' has advance_code but missing advance_text!", cipher.ID)
 			}
 		}

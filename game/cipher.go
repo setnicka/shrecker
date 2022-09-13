@@ -3,6 +3,29 @@ package game
 // GetCiphers returns ciphers in order as they are in config
 func (c *Config) GetCiphers() []CipherConfig { return c.ciphers }
 
+// CiphersSplitted is struct for ciphers splitted by types
+type CiphersSplitted struct {
+	Ciphers     []CipherConfig
+	MiniCiphers []CipherConfig
+	Simple      []CipherConfig
+}
+
+// GetCiphersByType returns struct with ciphers split by type
+func (c *Config) GetCiphersByType() CiphersSplitted {
+	cc := CiphersSplitted{}
+	for _, cipher := range c.ciphers {
+		switch cipher.Type {
+		case Cipher:
+			cc.Ciphers = append(cc.Ciphers, cipher)
+		case MiniCipher:
+			cc.MiniCiphers = append(cc.MiniCiphers, cipher)
+		case Simple:
+			cc.Simple = append(cc.Simple, cipher)
+		}
+	}
+	return cc
+}
+
 // GetCiphersMap returns map of ciphers by IDs
 func (c *Config) GetCiphersMap() map[string]*CipherConfig { return c.ciphersMap }
 

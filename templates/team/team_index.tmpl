@@ -41,11 +41,35 @@
 	<small class="form-text text-muted"><!--<b>Bez čísla týmu!</b> -->Za kód můžete připojit libovolný vzkaz organizátorům.</small>
 </form>
 
+{{ if .Ciphers }}
 <div class="panel cipher-list">
-<h2>Šifry</h2>
+<h2>Šifry <small>({{ .TeamStats.SolvedCiphers }}/{{ .TeamStats.FoundCiphers }})</small></h2>
 {{ template "team_ciphers_list" dict "Ciphers" .Ciphers "Game" .GameConfig "CSRF" .CSRF }}
 </div>
+{{ end }}
 
+{{ if .CiphersMini }}
+<div class="panel cipher-list">
+<h2>Šifřičky <small>({{ .TeamStats.SolvedMiniCiphers }}/{{ .TeamStats.FoundMiniCiphers }})</small></h2>
+{{ template "team_ciphers_list" dict "Ciphers" .CiphersMini "Game" .GameConfig "CSRF" .CSRF }}
+</div>
+{{ end }}
+
+{{ if .CiphersSimple }}
+<h2>Stanoviště <small>({{ .TeamStats.FoundSimple }})</small></h2>
+<div class="panel cipher-simple-wrap">
+{{ range .CiphersSimple }}
+<div class="cipher-simple found">
+	<div class="title">{{ if and .Config.File $.GameConfig.CouldTeamDownloadCiphers }}
+		<a title="Stáhnout" href="{{ basedir }}/cipher/{{ .Config.ID }}/download">{{ .Config.Name }}</a>
+	{{ else }}{{ .Config.Name }}{{ end }}</div>
+	<div class="body">
+		<span class="status-arrival" title="Čas příchodu">{{ .Arrival | timestamp_hint }}</span>
+	</div>
+</div>
+{{ end }}
+</div>
+{{ end }}
 
 <div id="messages">
 <h2>Zprávy</h2>

@@ -11,8 +11,11 @@
 
 table#dashboard {
 	font-size: 13px;
-	width: 100%;
+	margin: 0px auto;
 	border-collapse: collapse;
+}
+table#dashboard.full {
+	width: 100%;
 }
 table#dashboard td, table#dashboard th {
 	text-align: center;

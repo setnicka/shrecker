@@ -149,27 +149,40 @@ func (g *Game) loadConfig(globalConfig *ini.File) error {
 		return err
 	}
 
-	// Load ciphers
-	ciphersFile := gamecfg.Key("ciphers").String()
+	if err := config.loadCiphers(gamecfg.Key("ciphers").String()); err != nil {
+		return err
+	}
+
+	// Load teams
+	if err := config.loadTeams(gamecfg.Key("teams").String()); err != nil {
+		return err
+	}
+
+	// Store config
+	g.config.Store(config)
+	return nil
+}
+
+func (c *Config) loadCiphers(ciphersFile string) error {
 	ciphersBytes, err := ioutil.ReadFile(ciphersFile)
 	if err != nil {
 		return errors.Wrapf(err, "Cannot read ciphers from file '%s'", ciphersFile)
 	}
-	if err := json.Unmarshal(ciphersBytes, &config.ciphers); err != nil {
+	if err := json.Unmarshal(ciphersBytes, &c.ciphers); err != nil {
 		return errors.Wrapf(err, "Cannot unmarshal JSON from file '%s'", ciphersFile)
 	}
 	// create ciphers map and check that IDs are unique
-	config.ciphersMap = map[string]*CipherConfig{}
-	for _, cipher := range config.ciphers {
-		if _, found := config.ciphersMap[cipher.ID]; found {
+	c.ciphersMap = map[string]*CipherConfig{}
+	for _, cipher := range c.ciphers {
+		if _, found := c.ciphersMap[cipher.ID]; found {
 			return errors.Errorf("Config error: Duplicit cipher ID '%s'!", cipher.ID)
 		}
 		localCipher := cipher // to avoid linking all ciphers to the config of last one :) (cipher is for loop variable)
-		config.ciphersMap[cipher.ID] = &localCipher
+		c.ciphersMap[cipher.ID] = &localCipher
 	}
 	// check that cipher codes are unique, all texts are there and ciphers in depends_on and log_solved exists
 	codes := map[string]CipherConfig{}
-	for _, cipher := range config.ciphers {
+	for _, cipher := range c.ciphers {
 		if cipher.ArrivalCode != "" {
 			if cipher.ArrivalCode == cipher.AdvanceCode {
 				return errors.Errorf("Config error: Cipher '%s' has same arrival and advance codes '%s'!", cipher.ID, cipher.ArrivalCode)
@@ -190,25 +203,27 @@ func (g *Game) loadConfig(globalConfig *ini.File) error {
 		}
 		for _, variant := range cipher.DependsOn {
 			for _, d := range variant {
-				if _, found := config.ciphersMap[d]; !found {
+				if _, found := c.ciphersMap[d]; !found {
 					return errors.Errorf("Config error: Cipher '%s' depends on '%s' but cipher with this ID does not exists", cipher.ID, d)
 				}
 			}
 		}
 		for _, id := range cipher.LogSolved {
-			if _, found := config.ciphersMap[id]; !found {
+			if _, found := c.ciphersMap[id]; !found {
 				return errors.Errorf("Config error: Cipher '%s' has ID '%s' in 'log_solved' field but cipher with this ID does not exists", cipher.ID, id)
 			}
 		}
 		for _, id := range cipher.SharedStandings {
-			if _, found := config.ciphersMap[id]; !found {
+			if _, found := c.ciphersMap[id]; !found {
 				return errors.Errorf("Config error: Cipher '%s' has ID '%s' in 'shared_standings' field but cipher with this ID does not exists", cipher.ID, id)
 			}
 		}
 	}
 
-	// Load teams
-	teamsFile := gamecfg.Key("teams").String()
+	return nil
+}
+
+func (c *Config) loadTeams(teamsFile string) error {
 	teamsBytes, err := ioutil.ReadFile(teamsFile)
 	if err != nil {
 		return errors.Wrapf(err, "Cannot read teams from file '%s'", teamsFile)
@@ -218,16 +233,16 @@ func (g *Game) loadConfig(globalConfig *ini.File) error {
 		return errors.Wrapf(err, "Cannot unmarshal JSON from file '%s'", teamsFile)
 	}
 	// create teams map and check that IDs, logins and SMS codes are unique
-	config.teams = map[string]TeamConfig{}
-	config.teamHash = map[string]int{}
+	c.teams = map[string]TeamConfig{}
+	c.teamHash = map[string]int{}
 	logins := map[string]string{}
 	smsCodes := map[string]string{}
 	for _, team := range teamConfigs {
-		if _, found := config.teams[team.ID]; found {
+		if _, found := c.teams[team.ID]; found {
 			return errors.Errorf("Config error: Duplicit team ID '%s'!", team.ID)
 		}
-		config.teams[team.ID] = team
-		config.teamHash[team.ID] = rand.Int() // init with random hash to let know if something with the team changed
+		c.teams[team.ID] = team
+		c.teamHash[team.ID] = rand.Int() // init with random hash to let know if something with the team changed
 
 		if otherID, found := logins[team.Login]; found {
 			return errors.Errorf("Config error: Teams '%s' and '%s' have same login '%s'!", team.ID, otherID, team.Login)
@@ -240,7 +255,5 @@ func (g *Game) loadConfig(globalConfig *ini.File) error {
 		smsCodes[team.SMSCode] = team.ID
 	}
 
-	// Store config
-	g.config.Store(config)
 	return nil
 }

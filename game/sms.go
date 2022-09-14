@@ -142,15 +142,20 @@ func (t *Team) ProcessMessage(text string, sender string, smsID int) (string, st
 				finalOrder += order
 			}
 
-			pickup := ""
-			if finalOrder == len(t.gameConfig.teams) {
-				pickup = " <b>(jste poslední, seberte ho prosím)</b>"
+			msgParts := []string{"Kód přijat"}
+			if t.gameConfig.OrderPickupMessage {
+				msgParts = append(msgParts, fmt.Sprintf(", jste %d na tomto stanovišti", finalOrder))
 			}
-			extra := ""
+			if t.gameConfig.LastPickupMessage {
+				if finalOrder == len(t.gameConfig.teams) {
+					msgParts = append(msgParts, " <b>(jste poslední, seberte ho prosím)</b>")
+				}
+			}
+			msgParts = append(msgParts, ".")
 			if cipher.ArrivalText != "" {
-				extra = " <b>" + cipher.ArrivalText + "</b>"
+				msgParts = append(msgParts, " <b>"+cipher.ArrivalText+"</b>")
 			}
-			return msg("success", "Kód přijat, jste %d. na tomto stanovišti%s.%s", finalOrder, pickup, extra)
+			return msg("success", strings.Join(msgParts, ""))
 		}
 	} else {
 		if action == actionHint {

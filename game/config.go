@@ -47,6 +47,9 @@ type Config struct {
 	HintLimit time.Duration `ini:"hint_limit"`
 	SkipLimit time.Duration `ini:"skip_limit"`
 
+	OrderPickupMessage bool `ini:"order_pickup_message"`
+	LastPickupMessage  bool `ini:"last_pickup_message"`
+
 	// Ordering settings
 	OrderMode        orderMode `ini:"order_mode"`
 	PointsSolved     int       `ini:"points_solved"`

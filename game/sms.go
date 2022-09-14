@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/pkg/errors"
 )
@@ -127,11 +126,17 @@ func (t *Team) ProcessMessage(text string, sender string, smsID int) (string, st
 			if cipher.ArrivalCode != "" {
 				return msg("error", "Nemůžete zadat postupový kód nenavštíveného stanoviště! Nejdříve prosím odešlete příchodovou zprávu.")
 			}
-			t.LogCipherArrival(cipher)
-			t.LogCipherSolved(&cipher)
+			if err := t.LogCipherArrival(cipher); err != nil {
+				return "", "", err
+			}
+			if err := t.LogCipherSolved(&cipher); err != nil {
+				return "", "", err
+			}
 			return msg("success", "Správně! <b>%s</b>", cipher.AdvanceText)
 		} else {
-			t.LogCipherArrival(cipher)
+			if err := t.LogCipherArrival(cipher); err != nil {
+				return "", "", err
+			}
 
 			finalOrder := 0
 			ciphersToStandings := cipher.SharedStandings
@@ -159,33 +164,17 @@ func (t *Team) ProcessMessage(text string, sender string, smsID int) (string, st
 		}
 	} else {
 		if action == actionHint {
-			if status.Skip != nil {
-				return msg("info", "Tuto šifru jste již přeskočili")
-			} else if status.Solved != nil {
-				return msg("info", "Tuto šifru jste již vyřešili")
-			} else if cipher.HintText == "" {
-				return msg("info", "Tato šifra nemá nápovědu")
-			} else if d := time.Now().Sub(status.Arrival); d < t.gameConfig.HintLimit {
-				return msg("error", "Zatím uběhlo jen %v od příchodu na šifru, nápověda je dostupná až po %v od příchodu", d.Round(time.Second), t.gameConfig.HintLimit)
-			} else if status.Hint == nil {
-				if err := t.LogCipherHint(&cipher); err != nil {
-					return "", "", err
-				}
+			msgType, msgText, _, err := t.RequestHint(&cipher, status)
+			if err != nil {
+				return "", "", err
 			}
-			return msg("success", "Nápověda: %s", cipher.HintText)
+			return msg(msgType, msgText)
 		} else if action == actionSkip {
-			if status.Solved != nil {
-				return msg("info", "Tuto šifru jste již vyřešili")
-			} else if cipher.SkipText == "" {
-				return msg("info", "Tato šifra nelze přeskočit")
-			} else if d := time.Now().Sub(status.Arrival); d < t.gameConfig.SkipLimit {
-				return msg("error", "Zatím uběhlo jen %v od příchodu na šifru, přeskočení je dostupné až po %v od příchodu", d.Round(time.Second), t.gameConfig.SkipLimit)
-			} else if status.Skip == nil {
-				if err := t.LogCipherSkip(&cipher); err != nil {
-					return "", "", err
-				}
+			msgType, msgText, _, err := t.RequestSkip(&cipher, status)
+			if err != nil {
+				return "", "", err
 			}
-			return msg("success", "Další stanoviště: %s", cipher.SkipText)
+			return msg(msgType, msgText)
 		} else if action == actionAdvance {
 			t.LogCipherSolved(&cipher)
 			return msg("success", "Správně! <b>%s</b>", cipher.AdvanceText)

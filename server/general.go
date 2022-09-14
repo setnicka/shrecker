@@ -55,6 +55,10 @@ func (s *Server) setFlashMessage(w http.ResponseWriter, r *http.Request, mtype s
 	// Register the struct so encoding/gob knows about it
 	gob.Register(flashMessage{})
 
+	if mtype == "error" {
+		mtype = "danger"
+	}
+
 	message := fmt.Sprintf(messageFormat, a...)
 	session, err := s.sessionStore.Get(r, flashCookieName)
 	if err != nil {

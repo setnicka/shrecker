@@ -9,7 +9,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/coreos/go-log/log"
 	"github.com/go-chi/chi"
@@ -198,12 +197,10 @@ func (s *Server) teamIndex(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			tx.Commit() // always commit after message because it is always saved into DB
-			if respType == "error" {
-				respType = "danger"
-			}
 			s.setFlashMessage(w, r, respType, resp)
 
 			http.Redirect(w, r, s.basedir("/"), http.StatusSeeOther)
+			return
 		}
 
 		// Handle hint and skip
@@ -216,41 +213,27 @@ func (s *Server) teamIndex(w http.ResponseWriter, r *http.Request) {
 			status, statusFound := cipherStatus[cipherID]
 			if !found || !statusFound {
 				s.setFlashMessage(w, r, "danger", "Šifra s tímto ID neexistuje nebo jste ji zatím nenavštívili, nelze na ni žádat o nápovědu nebo přeskočení")
-			} else if hint {
-				if status.Skip != nil {
-					s.setFlashMessage(w, r, "info", "Tuto šifru jste již přeskočili")
-				} else if cipher.HintText == "" {
-					s.setFlashMessage(w, r, "danger", "Tato šifra nemá nápovědu")
-				} else if status.Hint != nil {
-					s.setFlashMessage(w, r, "info", "O nápovědu na tuto šifru jste již požádali")
-				} else if d := time.Now().Sub(status.Arrival); d < gameConfig.HintLimit {
-					s.setFlashMessage(w, r, "danger", "Zatím uběhlo jen %v od příchodu na šifru, nápověda je dostupná až po %v od příchodu", d, gameConfig.HintLimit)
+			} else {
+				var respType, resp string
+				var saved bool
+				if hint {
+					respType, resp, saved, err = team.RequestHint(cipher, status)
 				} else {
-					if err := team.LogCipherHint(cipher); err != nil {
-						http.Error(w, err.Error(), http.StatusInternalServerError)
-						return
-					}
-					tx.Commit()
-					s.setFlashMessage(w, r, "success", "Nápověda: %s", cipher.HintText)
+					respType, resp, saved, err = team.RequestSkip(cipher, status)
 				}
-			} else if skip {
-				if cipher.SkipText == "" {
-					s.setFlashMessage(w, r, "danger", "Tato šifra nelze přeskočit")
-				} else if status.Skip != nil {
-					s.setFlashMessage(w, r, "info", "Tuto šifru jste již přeskočili")
-				} else if d := time.Now().Sub(status.Arrival); d < gameConfig.SkipLimit {
-					s.setFlashMessage(w, r, "danger", "Zatím uběhlo jen %v od příchodu na šifru, přeskočení je dostupné až po %v od příchodu", d, gameConfig.SkipLimit)
-				} else {
-					if err := team.LogCipherSkip(cipher); err != nil {
-						http.Error(w, err.Error(), http.StatusInternalServerError)
-						return
-					}
-					tx.Commit()
-
-					s.setFlashMessage(w, r, "success", "Šifra přeskočena.<br>%s", cipher.SkipText)
+				if err == nil && saved {
+					err = tx.Commit()
 				}
+				if err != nil {
+					log.Errorf(err.Error())
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+				s.setFlashMessage(w, r, respType, resp)
 			}
+
 			http.Redirect(w, r, s.basedir("/"), http.StatusSeeOther)
+			return
 		}
 		// Handle move to position
 		latStr := r.PostFormValue("move-lat")

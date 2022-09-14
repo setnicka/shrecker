@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/coreos/go-log/log"
@@ -135,6 +136,40 @@ func (t *Team) LogPosition(pos Point) error {
 	log.Infof("Team '%s' (ID '%s') moved to new position %v", t.teamConfig.Name, t.teamConfig.ID, pos)
 	t.incHash()
 	return t.tx.Update("team_status", t.status, "WHERE team=:team", nil)
+}
+
+// RequestHint tests if hint is possible for this cipher and if so it logs it
+// and returns message which should be returned to the team
+func (t *Team) RequestHint(cipher *CipherConfig, status CipherStatus) (string, string, bool, error) {
+	if status.Skip != nil {
+		return "info", "Tuto šifru jste již přeskočili", false, nil
+	} else if status.Solved != nil {
+		return "info", "Tuto šifru jste již vyřešili", false, nil
+	} else if cipher.HintText == "" {
+		return "info", "Tato šifra nemá nápovědu", false, nil
+	} else if d := t.Now().Sub(status.Arrival); d < t.gameConfig.HintLimit {
+		return "error", fmt.Sprintf("Zatím uběhlo jen %v od příchodu na šifru, nápověda je dostupná až po %v od příchodu", d.Round(time.Second), t.gameConfig.HintLimit), false, nil
+	} else if status.Hint == nil {
+		err := t.LogCipherHint(cipher)
+		return "success", fmt.Sprintf("Nápověda: %s", cipher.HintText), true, err
+	}
+	return "success", fmt.Sprintf("Nápověda: %s", cipher.HintText), false, nil
+}
+
+// RequestSkip tests if skip is possible for this cipher and if so it logs it
+// and returns message which should be returned to the team
+func (t *Team) RequestSkip(cipher *CipherConfig, status CipherStatus) (string, string, bool, error) {
+	if status.Solved != nil {
+		return "info", "Tuto šifru jste již vyřešili", false, nil
+	} else if cipher.SkipText == "" {
+		return "info", "Tato šifra nelze přeskočit", false, nil
+	} else if d := t.Now().Sub(status.Arrival); d < t.gameConfig.SkipLimit {
+		return "error", fmt.Sprintf("Zatím uběhlo jen %v od příchodu na šifru, přeskočení je dostupné až po %v od příchodu", d.Round(time.Second), t.gameConfig.SkipLimit), false, nil
+	} else if status.Skip == nil {
+		err := t.LogCipherSkip(cipher)
+		return "success", fmt.Sprintf("Další stanoviště: %s", cipher.SkipText), true, err
+	}
+	return "success", fmt.Sprintf("Další stanoviště: %s", cipher.SkipText), false, nil
 }
 
 // LogCipherArrival adds new CipherStatus to the DB with logged time

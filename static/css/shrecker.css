@@ -133,3 +133,7 @@ h2 {
 	text-decoration-style: dotted;
 	cursor: help;
 }
+
+.hintX {
+	cursor: help;
+}

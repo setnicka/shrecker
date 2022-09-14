@@ -62,43 +62,16 @@
 
 <main class="wide">
 <table id="dashboard">
-	<thead class="thead-light"><tr>
-		{{- range .Ciphers -}}
-		<th>
-			{{ if .File }}<a href="{{ $basedir }}/org/cipher/{{ .ID }}/download">{{ .Name }}</a>{{ else }}{{ .Name }}{{ end }}
-			{{- if .HintText }}<span class="hint" title="{{ .HintText }}">[hint]</span>{{ end }}
-			{{- if .SkipText }}<span class="hint" title="{{ .SkipText }}">[skip]</span>{{ end }}
-		</th>
-		{{- end }}
-	</tr></thead>
-	<tr>
-		{{ range .Ciphers }}
-			{{- $status := index $.Team.Ciphers .ID -}}
-			{{ if not $status.Arrival.IsZero }}
-			<td class="cipher-status {{ if $status.Solved }}status-solved{{ else if $status.Arrival }}status-arrival{{ end }}">
-			{{- if not .NotCipher -}}
-			<div class="flex">
-				<span class="status-arrival">Příchod: {{ $status.Arrival | timestamp_hint }}</span>
-				{{ if $status.Hint }}<br><span class="status-hint">Hint: {{ $status.Hint | timestamp_hint }}</span>{{ end }}
-				{{ if $status.Skip }}<br><span class="status-skip">Skip: {{ $status.Skip | timestamp_hint }}</span>{{ end }}
-				{{ if $status.Solved }}<br><span class="status-solved">Postup: {{ $status.Solved | timestamp_hint }}
-					{{- if eq $game.OrderMode "points" }}<br>Bodů: <b>{{ $status.Points }}</b>
-						{{- if $status.ExtraPoints }} <small>(extra: {{ $status.ExtraPoints }})</small>{{ end -}}
-					{{ end -}}
-				</span>{{ end }}
-			</div>
-			{{- end -}}
-			</td>
-			{{- else -}}
-			<td>—</td>
-			{{ end }}
-		{{- end }}
-	</tr>
-	<tr>
-		{{ range .Ciphers }}
-		<td><a href="{{ $basedir }}/org/team/{{ $.Team.Config.ID }}/cipher/{{ .ID }}">Detaily</a></td>
-		{{ end }}
-	</tr>
+<thead class="thead-light"><tr>
+	{{ template "org_table_header" dict "Ciphers" .Ciphers}}
+</tr></thead>
+<tr>
+	{{ template "org_table_row" dict "Ciphers" .Ciphers "Game" .GameConfig "Team" .Team "Type" "single" }}
+</tr><tr>
+	{{ range .Ciphers }}
+	<td><a href="{{ basedir }}/org/team/{{ $.Team.Config.ID }}/cipher/{{ .ID }}">Detaily</a></td>
+	{{- end }}
+</tr>
 </table>
 </main>
 
@@ -116,7 +89,7 @@
 			<td>{{ if .SMSID }}<a href="tel:{{ .PhoneNumber }}">{{ .PhoneNumber }}</a>{{ else }}{{ .PhoneNumber }}{{ end }}</td>
 			<td>{{ if .Cipher }}
 				{{ $c := index $.CiphersMap .Cipher }}
-				{{ if $c }}<a href="{{ $basedir }}/org/team/{{ $.Team.Config.ID }}/cipher/{{ $c.ID }}">{{ $c.Name }}</a>{{ else }}???{{ end }}
+				{{ if $c }}<a href="{{ basedir }}/org/team/{{ $.Team.Config.ID }}/cipher/{{ $c.ID }}">{{ $c.Name }}</a>{{ else }}???{{ end }}
 			{{ end }}</td>
 			<td>{{ .Text }}</td>
 			<td>{{ .Response | safeHTML }}</td>

@@ -59,7 +59,9 @@ func (s *Server) getTemplates() (*template.Template, error) {
 
 	if changed {
 		log.Debug("Parsing all template files because of new/changed template files")
-		s.templates, err = template.New("").Funcs(templateFuncs).ParseFiles(templateFiles...)
+		s.templates, err = template.New("").Funcs(templateFuncs).Funcs(template.FuncMap{
+			"basedir": func() string { return s.config.BaseDir },
+		}).ParseFiles(templateFiles...)
 		if err != nil {
 			return nil, err
 		}

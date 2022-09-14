@@ -1,0 +1,39 @@
+{{ define "org_table_header"}}
+{{- range .Ciphers -}}
+	<th>
+		{{ if .File }}<a title="Stáhnout" href="{{ basedir }}/org/cipher/{{ .ID }}/download">{{ .Name }}</a>{{ else }}{{ .Name }}{{ end }}
+		{{- if .HintText }}<span class="hintX" title="Nápověda: {{ .HintText }}">💡</span>{{ end }}
+		{{- if .SkipText }}<span class="hintX" title="Přeskočení: {{ .SkipText }}">⏩</span>{{ end }}
+		{{- if .AdvanceText }}<span class="hintX" title="Text při vyřešení: {{ .AdvanceText }}">✅</span>{{ end }}
+	</th>
+{{- end }}
+{{ end }}
+
+{{ define "org_table_row" }}
+{{ range .Ciphers }}
+	{{- $status := index $.Team.Ciphers .ID -}}
+	{{- if not $status.Arrival.IsZero -}}
+	<td class="cipher-status {{ if $status.Solved }}status-solved{{ else if $status.Arrival }}status-arrival{{ end }}">
+	{{- if not .NotCipher -}}
+	<div class="flex">
+		{{ if $status.Arrival }}<span class="status-arrival" title="Čas příchodu">{{ $status.Arrival | timestamp_hint }}</span>{{ end }}
+		{{ if $status.Hint }}<span class="status-hint" title="Nápověda vydána">💡 {{ $status.Hint | timestamp_hint }}</span>{{ end }}
+		{{ if $status.Skip }}<span class="status-skip" title="Přeskočeno">⏩ {{ $status.Skip | timestamp_hint }}</span>{{ end }}
+		{{ if $status.Solved }}<span class="status-solved" title="Vyřešeno">✅ {{ $status.Solved | timestamp_hint }}
+			{{- if eq $.Game.OrderMode "points" }}<br>Bodů: <b>{{ $status.Points }}</b>
+				{{- if $status.ExtraPoints }} <small>(extra: {{ $status.ExtraPoints }})</small>{{ end -}}
+			{{ end -}}
+		</span>{{ end }}
+		{{ if eq $.Type "dashboard" }}<span class="link"><small><a href="{{ basedir }}/org/team/{{ $.Team.Config.ID }}/cipher/{{ .ID }}">Detail šifry</a></small></span>{{ end }}
+	</div>
+	{{- end -}}
+	</td>
+	{{- else -}}
+		{{ if eq $.Type "dashboard" }}
+		<td><span class="link"><a href="{{ basedir }}/org/team/{{ $.Team.Config.ID }}/cipher/{{ .ID }}" title="Detail šifry">—</a></span></td>
+		{{ else }}
+		<td>—</td>
+		{{ end }}
+	{{ end }}
+{{- end }}
+{{ end }}

@@ -179,6 +179,17 @@ func (s *Server) teamIndex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == http.MethodPost {
+		now := team.Now()
+		if gameConfig.NotStarted(now) {
+			s.setFlashMessage(w, r, "danger", "Akci nelze provést, hra začíná až v %s", timestampFormat(gameConfig.Start))
+			http.Redirect(w, r, s.basedir("/"), http.StatusSeeOther)
+			return
+		} else if gameConfig.Ended(now) {
+			s.setFlashMessage(w, r, "danger", "Akci nelze provést, hra skončila v %s", timestampFormat(gameConfig.End))
+			http.Redirect(w, r, s.basedir("/"), http.StatusSeeOther)
+			return
+		}
+
 		// Handle codes from message input
 		if r.PostFormValue("submit-message") != "" {
 			respType, resp, err := team.ProcessMessage(strings.TrimSpace(r.PostFormValue("message")), "WEB", 0)
@@ -251,12 +262,7 @@ func (s *Server) teamIndex(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, latErr.Error()+lonErr.Error(), http.StatusBadRequest)
 				return
 			}
-			now := team.Now()
-			if gameConfig.NotStarted(now) {
-				s.setFlashMessage(w, r, "danger", "Nelze se přesunout, hra začíná až v %s", timestampFormat(gameConfig.Start))
-			} else if gameConfig.Ended(now) {
-				s.setFlashMessage(w, r, "danger", "Nelze se přesunout, hra skončila v %s", timestampFormat(gameConfig.End))
-			} else if status.CooldownTo != nil && status.CooldownTo.After(now) {
+			if status.CooldownTo != nil && status.CooldownTo.After(now) {
 				s.setFlashMessage(w, r, "danger", "Nelze se přesunout, ještě máte cooldown do %s", timestampFormat(*status.CooldownTo))
 			} else {
 				if err := team.MapMoveToPosition(game.Point{Lat: lat, Lon: lon}); err != nil {
@@ -481,9 +487,20 @@ func (s *Server) processSMS(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Try to find team
-	team, tx, _, err := s.game.GetTeamByCode(r.Context(), identifier)
+	team, tx, gameConfig, err := s.game.GetTeamByCode(r.Context(), identifier)
 	if err == game.ErrTeamNotFound {
 		smsMessage(w, "Neznámý kód týmu %s, zkontrolujte prosim správnost", identifier)
+		return
+	}
+
+	now := team.Now()
+	if gameConfig.NotStarted(now) {
+		smsMessage(w, "Nezpracovano, hra zacina az v %s", timestampFormat(gameConfig.Start))
+		log.Infof("SMS too early: %s %s", identifier, text)
+		return
+	} else if gameConfig.Ended(now) {
+		smsMessage(w, "Nezpracovano, hra skoncila v %s", timestampFormat(gameConfig.Start))
+		log.Infof("SMS after end of game: %s %s", identifier, text)
 		return
 	}
 

@@ -136,6 +136,7 @@ h2 {
 	background-color: rgb(238, 238, 187);
 	transition: 1s;
 }
+/* .cipher-list .cipher.companion { opacity: 0.7; } */
 .cipher-list .cipher .title {
 
 }
@@ -172,6 +173,9 @@ h2 {
 }
 .cipher-simple.found {
 	background-color: rgb(169, 241, 169);
+}
+.cipher-simple.companion {
+	opacity: 0.6;
 }
 .cipher-simple .title {
 	font-weight: bold;

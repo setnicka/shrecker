@@ -18,6 +18,11 @@
 
 <table class="table table-sm">
 	<tr><td>ID</td><td><code>{{ .Team.Config.ID }}</code></td></tr>
+	{{ if .Team.Config.CompanionIDs }}
+	<tr><td class="hint" title="Vidí šifry získané těmito týmy">Sdružené týmy:</td><td>
+		{{ range $i, $id := .Team.Config.CompanionIDs }}{{ if gt $i 0 }}, {{ end }}<a href="{{ $basedir }}/org/team/{{ $id }}">{{ $id }}</a>{{ end }}
+	</td></tr>
+	{{ end }}
 	{{ if .Team.Config.SMSCode }}
 	<tr><td>SMS kód</td><td><code>{{ .Team.Config.SMSCode }}</code></td></tr>
 	{{ end }}
@@ -105,7 +110,8 @@
 <div class="cipher-simple-wrap">
 {{ range .Ciphers.Simple }}
 	{{- $status := index $.Team.Ciphers .ID -}}
-	<div class="cipher-simple{{ if not $status.Arrival.IsZero }} found{{ end }}">
+	{{- $is_companion := and (not $status.Arrival.IsZero) (ne $status.Team $.Team.Config.ID) -}}
+	<div class="cipher-simple{{ if not $status.Arrival.IsZero }} found{{ end }}{{ if $is_companion }} companion{{ end }}" {{ if $is_companion }}title="Nalezeno spolutýmem {{ $status.TeamP.Name }}"{{ end }}>
 		<div class="title">{{ if .File }}<a title="Stáhnout" href="{{ basedir }}/org/cipher/{{ .ID }}/download">{{ .Name }}</a>{{ else }}{{ .Name }}{{ end }}</div>
 		<div class="body">
 			<a title="Detail" href="{{ basedir }}/org/team/{{ $.Team.Config.ID }}/cipher/{{ .ID }}">

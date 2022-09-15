@@ -60,7 +60,9 @@
 		</form>
 	</td></tr>
 {{ else }}
-	<tr><td>Nalezená</td><td>✅ {{ .CipherStatus.Arrival | timestamp }}</td></tr>
+	<tr><td>Nalezená</td><td>✅ {{ .CipherStatus.Arrival | timestamp }}
+		{{- if ne .CipherStatus.Team .Team.ID }}<br><b>Nalezeno spolutýmem <a href="{{ basedir }}/org/team/{{ .CipherStatus.TeamP.ID }}">{{ .CipherStatus.TeamP.Name }}</b></a>{{ end -}}
+	</td></tr>
 	<tr><td>Vyřešená</td><td>{{ if .CipherStatus.Solved }}✅ {{ .CipherStatus.Solved | timestamp }}{{ else }}
 		❌ {{ if not .CipherStatus.Skip }}<form method="POST" class="float-right" onsubmit="return confirm('Opravdu označit jako vyřešenou?');">
 			{{ .CSRF }}

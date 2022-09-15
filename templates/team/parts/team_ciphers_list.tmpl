@@ -1,7 +1,8 @@
 {{ define "team_ciphers_list" }}
 {{ $enabled := not (or (.GameConfig.Ended now) (.GameConfig.NotStarted now)) }}
 {{ range .Ciphers}}
-	<div class="cipher {{ if .Solved }}solved{{ else if .Skip }}skip{{ end }}" id="cipher-{{ .Config.ID }}">
+	{{- $is_companion := ne .Team $.Team.ID -}}
+	<div class="cipher {{ if .Solved }}solved{{ else if .Skip }}skip{{ end }}{{ if $is_companion }} companion{{ end }}" id="cipher-{{ .Config.ID }}">
 		<div class="title">
 		<strong>{{ if and .Config.File $.Game.CouldTeamDownloadCiphers }}<a href="{{ basedir }}/cipher/{{ .Config.ID }}/download">{{ .Config.Name }}</a>{{ else }}{{ .Config.Name }}{{ end }}</strong>
 		{{ if .Config.NotCipher }}{{ else }}
@@ -12,6 +13,7 @@
 		{{ end }}
 		</div>
 		<ul>
+			{{ if $is_companion }}<li><small>Nalezeno spolutýmem <strong>{{ .TeamP.Name }}</strong></small></li>{{ end }}
 			<li><small>Objeveno v {{ .Arrival | timestamp }}</small>{{ if .Config.ArrivalText }}<br><b>{{ .Config.ArrivalText }}</b>{{ end }}</li>
 			{{ if .Hint }}<li><small>Nápověda v {{ .Hint | timestamp }}:</small><br><b>{{ .Config.HintText }}</b>{{ end }}
 			{{ if .Solved }}<li><small>Vyřešeno v {{ .Solved | timestamp }}</small>{{ if .Config.AdvanceText }}<br><b>{{ .Config.AdvanceText }}</b>{{ end }}</li>{{ end }}

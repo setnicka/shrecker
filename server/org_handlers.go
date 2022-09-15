@@ -430,7 +430,7 @@ type orgMessagesData struct {
 	GameConfig *game.Config
 	Messages   []game.Message
 	CiphersMap map[string]*game.CipherConfig
-	TeamsMap   map[string]game.TeamConfig
+	TeamsMap   map[string]*game.TeamConfig
 }
 
 func (s *Server) orgMessages(w http.ResponseWriter, r *http.Request) {

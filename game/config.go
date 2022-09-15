@@ -84,7 +84,7 @@ type Config struct {
 
 	ciphers    []CipherConfig
 	ciphersMap map[string]*CipherConfig
-	teams      map[string]TeamConfig
+	teams      map[string]*TeamConfig
 	teamHash   map[string]int // changed everytime when something for the team changes
 }
 
@@ -111,13 +111,14 @@ type CipherConfig struct {
 
 // TeamConfig is parsed configuration from JSON
 type TeamConfig struct {
-	ID       string            `json:"id"`
-	Name     string            `json:"name"`
-	Jitsi    string            `json:"jitsi"` // link for Jitsi room (online-map mode)
-	Login    string            `json:"login"`
-	Password string            `json:"password"`
-	SMSCode  string            `json:"sms_code"` // used in SMS to identify this team
-	Members  map[string]string `json:"members"`  // maps name -> email or name -> phone number
+	ID           string            `json:"id"`
+	CompanionIDs []string          `json:"companion_ids"` // IDs of other teams that should share information
+	Name         string            `json:"name"`
+	Jitsi        string            `json:"jitsi"` // link for Jitsi room (online-map mode)
+	Login        string            `json:"login"`
+	Password     string            `json:"password"`
+	SMSCode      string            `json:"sms_code"` // used in SMS to identify this team
+	Members      map[string]string `json:"members"`  // maps name -> email or name -> phone number
 }
 
 // PointRadius represent one point on map with radius
@@ -267,12 +268,12 @@ func (c *Config) loadTeams(teamsFile string) error {
 	if err != nil {
 		return errors.Wrapf(err, "Cannot read teams from file '%s'", teamsFile)
 	}
-	teamConfigs := []TeamConfig{}
+	teamConfigs := []*TeamConfig{}
 	if err := json.Unmarshal(teamsBytes, &teamConfigs); err != nil {
 		return errors.Wrapf(err, "Cannot unmarshal JSON from file '%s'", teamsFile)
 	}
 	// create teams map and check that IDs, logins and SMS codes are unique
-	c.teams = map[string]TeamConfig{}
+	c.teams = map[string]*TeamConfig{}
 	c.teamHash = map[string]int{}
 	logins := map[string]string{}
 	smsCodes := map[string]string{}
@@ -292,6 +293,18 @@ func (c *Config) loadTeams(teamsFile string) error {
 			return errors.Errorf("Config error: Teams '%s' and '%s' have same SMS code '%s'!", team.ID, otherID, team.SMSCode)
 		}
 		smsCodes[team.SMSCode] = team.ID
+	}
+
+	// Check companions
+	for _, team := range c.teams {
+		for _, companionID := range team.CompanionIDs {
+			if companionID == team.ID {
+				return errors.Errorf("Config error: Team '%s' cannot have itself as a companion!", team.ID)
+			}
+			if _, found := c.teams[companionID]; !found {
+				return errors.Errorf("Config error: Team '%s' has unknown companion '%s'!", team.ID, companionID)
+			}
+		}
 	}
 
 	return nil

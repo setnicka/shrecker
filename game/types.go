@@ -25,7 +25,7 @@ type Team struct {
 	tx                 *sqlxpp.Tx // transaction for all DB changes
 	now                time.Time  // cached time of time.Now()
 	gameConfig         *Config    // configuration of the game
-	teamConfig         TeamConfig
+	teamConfig         *TeamConfig
 	status             TeamStatus
 	statusLoaded       bool
 	cipherStatus       map[string]CipherStatus
@@ -65,6 +65,7 @@ type CipherStatus struct {
 	// Not in DB, calculated in Shrecker
 	Config *CipherConfig `db:"-"`
 	Points int           `db:"-"`
+	TeamP  *TeamConfig   `db:"-"`
 }
 
 // TeamLocationEntry is one record from team_location_history table

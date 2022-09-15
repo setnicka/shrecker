@@ -76,6 +76,9 @@ func (c *CipherStatus) init(gameConfig *Config) {
 	if c.Config, found = gameConfig.ciphersMap[c.Cipher]; !found {
 		return
 	}
+	if c.TeamP, found = gameConfig.teams[c.Team]; !found {
+		return
+	}
 
 	if c.Config.NotCipher {
 		return

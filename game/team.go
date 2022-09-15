@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/coreos/go-log/log"
+	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
 
@@ -17,7 +18,7 @@ func (t *Team) Now() time.Time {
 }
 
 // GetConfig returns team config
-func (t *Team) GetConfig() *TeamConfig { return &t.teamConfig }
+func (t *Team) GetConfig() *TeamConfig { return t.teamConfig }
 
 // GetHash returns current hash representing state of the team
 func (t *Team) GetHash() int { return t.gameConfig.teamHash[t.teamConfig.ID] }
@@ -37,7 +38,14 @@ func (t *Team) GetStatus() (*TeamStatus, error) {
 func (t *Team) GetCipherStatus() (map[string]CipherStatus, error) {
 	if !t.cipherStatusLoaded {
 		cipherStatuses := []CipherStatus{}
-		if err := t.tx.SelectE(&cipherStatuses, "SELECT * FROM cipher_status WHERE team=$1", t.teamConfig.ID); err != nil {
+
+		IDs := append(t.teamConfig.CompanionIDs, t.teamConfig.ID)
+		query, args, err := sqlx.In("SELECT * FROM cipher_status WHERE team IN (?)", IDs)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := t.tx.SelectE(&cipherStatuses, sqlx.Rebind(sqlx.DOLLAR, query), args...); err != nil {
 			return nil, err
 		}
 		t.cipherStatus = map[string]CipherStatus{}

@@ -44,6 +44,9 @@ table#dashboard thead tr {
 
 td.cipher-status.status-arrival { background-color: #dbc926; }
 td.cipher-status.status-solved { background-color: #669900; }
+td.cipher-status.companion {
+	opacity: 0.35
+}
 td.cipher-status .flex {
 	display: flex;
 	flex-direction: column;

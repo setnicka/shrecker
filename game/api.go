@@ -48,7 +48,7 @@ func (g *Game) GetTeamByCode(ctx context.Context, SMSCode string) (*Team, *sqlxp
 	if SMSCode == "" {
 		return nil, nil, &gameConfig, ErrTeamNotFound
 	}
-	var team TeamConfig
+	var team *TeamConfig
 	found := false
 	for _, team = range gameConfig.teams {
 		if team.SMSCode == SMSCode {
@@ -67,7 +67,7 @@ func (g *Game) GetTeamByCode(ctx context.Context, SMSCode string) (*Team, *sqlxp
 }
 
 // GetTeamsConfigMap returns team configuration in map by team ID
-func (c *Config) GetTeamsConfigMap() map[string]TeamConfig { return c.teams }
+func (c *Config) GetTeamsConfigMap() map[string]*TeamConfig { return c.teams }
 
 // LoginTeam returns Team with given login and password or fails with ErrLogin
 // when login and password does not match any team.
@@ -94,9 +94,13 @@ func (g *Game) GetAll(ctx context.Context, loadStatus, loadCiphers, loadLocation
 
 	teams := map[string]*Team{}
 	teamIDs := []string{}
+	companionMap := map[string][]string{}
 	for _, t := range gameConfig.teams {
 		teams[t.ID] = &Team{gameConfig: &gameConfig, tx: tx, teamConfig: t, now: now, cipherStatus: map[string]CipherStatus{}}
 		teamIDs = append(teamIDs, t.ID)
+		for _, id := range t.CompanionIDs {
+			companionMap[id] = append(companionMap[id], t.ID)
+		}
 	}
 
 	if loadStatus {
@@ -125,6 +129,9 @@ func (g *Game) GetAll(ctx context.Context, loadStatus, loadCiphers, loadLocation
 		for _, cs := range cipherStatuses {
 			cs.init(&gameConfig)
 			teams[cs.Team].cipherStatus[cs.Cipher] = cs
+			for _, id := range companionMap[cs.Team] {
+				teams[id].cipherStatus[cs.Cipher] = cs
+			}
 		}
 		for _, teamID := range teamIDs {
 			teams[teamID].cipherStatusLoaded = true

@@ -12,8 +12,9 @@
 {{ define "org_table_row" }}
 {{ range .Ciphers }}
 	{{- $status := index $.Team.Ciphers .ID -}}
+	{{- $is_companion := ne $status.Team $.Team.Config.ID -}}
 	{{- if not $status.Arrival.IsZero -}}
-	<td class="cipher-status {{ if $status.Solved }}status-solved{{ else if $status.Arrival }}status-arrival{{ end }}">
+	<td class="cipher-status {{ if $status.Solved }}status-solved{{ else if $status.Arrival }}status-arrival{{ end }}{{ if $is_companion }} companion{{ end }}" {{ if $is_companion }}title="Nalezeno spolutýmem {{ $status.TeamP.Name }}"{{ end }}>
 	{{- if not .NotCipher -}}
 	<div class="flex">
 		{{ if $status.Arrival }}<span class="status-arrival" title="Čas příchodu">{{ $status.Arrival | timestamp_hint }}</span>{{ end }}

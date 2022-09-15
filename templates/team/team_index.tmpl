@@ -44,14 +44,14 @@
 {{ if .Ciphers }}
 <div class="panel cipher-list">
 <h2>Šifry <small>({{ .TeamStats.SolvedCiphers }}/{{ .TeamStats.FoundCiphers }})</small></h2>
-{{ template "team_ciphers_list" dict "Ciphers" .Ciphers "Game" .GameConfig "CSRF" .CSRF }}
+{{ template "team_ciphers_list" dict "Ciphers" .Ciphers "Team" .TeamConfig "Game" .GameConfig "CSRF" .CSRF }}
 </div>
 {{ end }}
 
 {{ if .CiphersMini }}
 <div class="panel cipher-list">
 <h2>Šifřičky <small>({{ .TeamStats.SolvedMiniCiphers }}/{{ .TeamStats.FoundMiniCiphers }})</small></h2>
-{{ template "team_ciphers_list" dict "Ciphers" .CiphersMini "Game" .GameConfig "CSRF" .CSRF }}
+{{ template "team_ciphers_list" dict "Ciphers" .CiphersMini "Team" .TeamConfig "Game" .GameConfig "CSRF" .CSRF }}
 </div>
 {{ end }}
 
@@ -59,7 +59,8 @@
 <h2>Stanoviště <small>({{ .TeamStats.FoundSimple }})</small></h2>
 <div class="panel cipher-simple-wrap">
 {{ range .CiphersSimple }}
-<div class="cipher-simple found">
+{{- $is_companion := ne .Team $.TeamConfig.ID -}}
+<div class="cipher-simple found{{ if $is_companion }} companion{{ end }}" {{ if $is_companion}}title="Nalezeno spolutýmem {{ .TeamP.Name }}"{{ end }}>
 	<div class="title">{{ if and .Config.File $.GameConfig.CouldTeamDownloadCiphers }}
 		<a title="Stáhnout" href="{{ basedir }}/cipher/{{ .Config.ID }}/download">{{ .Config.Name }}</a>
 	{{ else }}{{ .Config.Name }}{{ end }}</div>

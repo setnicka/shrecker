@@ -83,8 +83,9 @@ type Config struct {
 	HintLimit           time.Duration `ini:"hint_limit"`
 	SkipLimit           time.Duration `ini:"skip_limit"`
 
-	OrderPickupMessage bool `ini:"order_pickup_message"`
-	LastPickupMessage  bool `ini:"last_pickup_message"`
+	OrderPickupMessage   bool `ini:"order_pickup_message"`
+	LastPickupMessage    bool `ini:"last_pickup_message"`
+	AllowDownloadCiphers bool `ini:"allow_download_ciphers"`
 
 	// Ordering settings
 	OrderMode        orderMode `ini:"order_mode"`

@@ -43,7 +43,7 @@ func (p *PointRadius) InRadius(pos Point) bool {
 
 // CouldTeamDownloadCiphers tests if game mode allows to download ciphers
 func (c *Config) CouldTeamDownloadCiphers() bool {
-	return c.Mode == GameOnlineCodes || c.Mode == GameOnlineMap
+	return c.AllowDownloadCiphers || c.Mode == GameOnlineCodes || c.Mode == GameOnlineMap
 }
 
 // HasMiniCipherHints returns true if mini ciphers are used to provide hints

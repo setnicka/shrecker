@@ -1,0 +1,44 @@
+{{ define "team_ciphers_list" }}
+{{ $enabled := not (or (.GameConfig.Ended now) (.GameConfig.NotStarted now)) }}
+{{ range .Ciphers}}
+	<div class="cipher {{ if .Solved }}solved{{ else if .Skip }}skip{{ end }}" id="cipher-{{ .Config.ID }}">
+		<div class="title">
+		<strong>{{ if and .Config.File $.Game.CouldTeamDownloadCiphers }}<a href="{{ basedir }}/cipher/{{ .Config.ID }}/download">{{ .Config.Name }}</a>{{ else }}{{ .Config.Name }}{{ end }}</strong>
+		{{ if .Config.NotCipher }}{{ else }}
+		{{ if and (eq $.Game.OrderMode "points") .Points -}}
+			<small class="float-right text-muted">Získané body: <b>{{ .Points }}</b>
+				{{- if .ExtraPoints }} ({{ if gt .ExtraPoints 0 }}extra body{{ else }}penalizace{{ end }}: <b>{{ .ExtraPoints }}</b>){{ end -}}
+			</small>
+		{{ end }}
+		</div>
+		<ul>
+			<li><small>Objeveno v {{ .Arrival | timestamp }}</small>{{ if .Config.ArrivalText }}<br><b>{{ .Config.ArrivalText }}</b>{{ end }}</li>
+			{{ if .Hint }}<li><small>Nápověda v {{ .Hint | timestamp }}:</small><br><b>{{ .Config.HintText }}</b>{{ end }}
+			{{ if .Solved }}<li><small>Vyřešeno v {{ .Solved | timestamp }}</small>{{ if .Config.AdvanceText }}<br><b>{{ .Config.AdvanceText }}</b>{{ end }}</li>{{ end }}
+			{{ if .Skip }}<li><small>Přeskočeno v {{ .Skip | timestamp }}:</small><br><b>{{ .Config.SkipText }}</b>{{ end }}
+		</ul>
+		{{ $displayHintButton := and .Config.HintText (not .Hint) (not .Skip) }}
+		{{ $displaySkipButton := and .Config.SkipText (not .Skip) }}
+
+		{{ if and $enabled (not .Solved) (or $displayHintButton $displaySkipButton) }}
+		<form method="POST">
+			{{ $.CSRF }}
+			<input type="hidden" name="cipher" value="{{ .Config.ID }}">
+			<div class="btn-group">
+				{{- if $displayHintButton }}
+				<input type="submit" name="hint" class="btn btn-sm btn-primary" value="Požádat o nápovědu"
+					{{- if lt ( now.Sub .Arrival ) $.Game.HintLimit }} disabled title="Nápovědu lze získat nejdříve {{ $.Game.HintLimit }} po příchodu" data-countdown-disabled="{{ .Arrival.Add $.Game.HintLimit | timestamp_js }}"
+					{{- end }} onclick="return confirm('Opravdu požádat o nápovědu k šifře {{ .Config.Name }}? Tato akce nelze vzít zpátky');">
+				{{- end }}
+				{{- if $displaySkipButton}}
+				<input type="submit" name="skip" class="btn btn-sm btn-danger" value="Přeskočit šifru"
+					{{- if lt ( now.Sub .Arrival ) $.Game.SkipLimit }} disabled title="Přeskočit šifru lze získat nejdříve {{ $.Game.SkipLimit }} po příchodu" data-countdown-disabled="{{ .Arrival.Add $.Game.SkipLimit | timestamp_js }}"
+					{{- end }} onclick="return confirm('Opravdu přeskočit šifru {{ .Config.Name }}? Tato akce nelze vzít zpátky');">
+				{{- end }}
+			</div>
+		</form>
+		{{ end }}
+		{{ end }}
+	</div>
+{{ end }}
+{{ end }}

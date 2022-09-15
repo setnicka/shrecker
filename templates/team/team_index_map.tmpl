@@ -5,17 +5,13 @@
 <body>
 
 {{ $now := .Now }}
-{{ $csrf := .CSRF }}
-{{ $game := .GameConfig }}
-{{ $basedir := .Basedir }}
-{{ $enabled := not (or (.GameConfig.Ended $now) (.GameConfig.NotStarted $now)) }}
 
 <div id="panel">
 {{ template "part_messageBox" . }}
 
 <div id="team-status">
-	<form method="POST" action="{{ $basedir }}/logout" class="pull-right">
-		{{ $csrf }}
+	<form method="POST" action="{{ basedir }}/logout" class="pull-right">
+		{{ .CSRF }}
 		<button class="btn btn-sm btn-secondary">Odhlásit</button>
 	</form>
 	<h2>Tým: {{.TeamConfig.Name}}</h2>
@@ -30,47 +26,9 @@
 	</ul>
 </div>
 
-<div id="cipher-list">
+<div id="cipher-list" class="cipher-list">
 <h2>Šifry</h2>
-{{ range .Ciphers}}
-	<div class="cipher {{ if .Solved }}solved{{ else if .Skip }}skip{{ end }}" id="cipher-{{ .Config.ID }}">
-		<strong>{{ if .Config.File }}<a href="{{ $basedir }}/cipher/{{ .Config.ID }}/download">{{ .Config.Name }}</a>{{ else }}{{ .Config.Name }}{{ end }}</strong>
-		{{ if .Config.NotCipher }}{{ else }}
-		<ul>
-			<li><small>Objeveno v {{ .Arrival | timestamp }}</small></li>
-			{{ if .Hint }}<li><small>Nápověda v {{ .Hint | timestamp }}:</small><br><b>{{ .Config.HintText }}</b>{{ end }}
-			{{ if .Solved }}<li><small>Vyřešeno v {{ .Solved | timestamp }}</small></li>{{ end }}
-			{{ if .Skip }}<li><small>Přeskočeno v {{ .Skip | timestamp }}:</small><br><b>{{ .Config.SkipText }}</b>{{ end }}
-			{{ if and (eq $game.OrderMode "points") .Points -}}
-				<li><small>Získané body:</small> <b>{{ .Points }}</b>
-				{{- if .ExtraPoints }}(<small>{{ if gt .ExtraPoints 0 }}Extra body{{ else }}Penalizace{{ end }}:</small> <b>{{ .ExtraPoints }}</b>){{ end -}}
-				</li>
-			{{ end }}
-		</ul>
-		{{ $displayHintButton := and .Config.HintText (not .Hint) (not .Skip) }}
-		{{ $displaySkipButton := and .Config.SkipText (not .Skip) }}
-
-		{{ if and $enabled (not .Solved) (or $displayHintButton $displaySkipButton) }}
-		<form method="POST">
-			{{ $csrf }}
-			<input type="hidden" name="cipher" value="{{ .Config.ID }}">
-			<div class="btn-group">
-				{{- if $displayHintButton }}
-				<input type="submit" name="hint" class="btn btn-sm btn-primary" value="Požádat o nápovědu"
-					{{- if lt ( $now.Sub .Arrival ) $game.HintLimit }} disabled title="Nápovědu lze získat nejdříve {{ $game.HintLimit }} po příchodu" data-countdown-disabled="{{ .Arrival.Add $game.HintLimit | timestamp_js }}"
-					{{- end }} onclick="return confirm('Opravdu požádat o nápovědu k šifře {{ .Config.Name }}? Tato akce nelze vzít zpátky');">
-				{{- end }}
-				{{- if $displaySkipButton}}
-				<input type="submit" name="skip" class="btn btn-sm btn-danger" value="Přeskočit šifru"
-					{{- if lt ( $now.Sub .Arrival ) $game.SkipLimit }} disabled title="Přeskočit šifru lze získat nejdříve {{ $game.SkipLimit }} po příchodu" data-countdown-disabled="{{ .Arrival.Add $game.SkipLimit | timestamp_js }}"
-					{{- end }} onclick="return confirm('Opravdu přeskočit šifru {{ .Config.Name }}? Tato akce nelze vzít zpátky');">
-				{{- end }}
-			</div>
-		</form>
-		{{ end }}
-		{{ end }}
-	</div>
-{{ end }}
+{{ template "team_ciphers_list" dict "Ciphers" .Ciphers "Game" .GameConfig "CSRF" .CSRF }}
 </div>
 </div>
 
@@ -128,7 +86,7 @@ map.on('click', function(e) {
 	.openOn(map);
 
 	$.ajax({
-		url: '{{ .Basedir }}/api/calc-move',
+		url: '{{ basedir }}/api/calc-move',
 		data: {
 			lat: e.latlng.lat,
 			lon: e.latlng.lng,
@@ -164,7 +122,7 @@ map.on('click', function(e) {
 // Hloupá pravidelná kontrola, jestli se něco změnilo
 setInterval(function() {
 	$.ajax({
-		url: '{{ .Basedir }}/api/hash',
+		url: '{{ basedir }}/api/hash',
 		type: 'GET',
 		success: function (data) {
 			if (data != '{{ .TeamHash }}') {

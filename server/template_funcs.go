@@ -98,5 +98,6 @@ var (
 			}
 			return dict, nil
 		},
+		"now": func() time.Time { return time.Now() },
 	}
 )

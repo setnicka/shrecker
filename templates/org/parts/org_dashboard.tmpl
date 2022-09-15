@@ -33,11 +33,12 @@
 			<a href="{{ basedir }}/org/team/{{ .Config.ID }}" title="Detail týmu">{{ .Config.Name }}</a>
 			{{ if $.GameConfig.HasMap }}<br><a href="#" onclick="showPath('{{ .Config.ID }}'); return false;"><small>zobrazit na mapě</small></a>{{ end }}
 			<small>
-			{{- if eq $.GameConfig.OrderMode "points" }}<br>Bodů: {{ .Points }}{{ end -}}
+			{{- if eq $.GameConfig.OrderMode "points" }}<br><b>Bodů: {{ .Points }}</b>{{ end -}}
+			{{- if $.GameConfig.HasMiniCipherHints }}<br><b>Šifřičkové konto: {{ .Stats.HintScore }}</b>{{ end -}}
 			{{ if $.Ciphers.Ciphers }}<br>Šifer: {{ .Stats.SolvedCiphers }}/{{ .Stats.FoundCiphers }} z {{ len $.Ciphers.Ciphers }}{{ end }}
 			{{ if $.Ciphers.MiniCiphers }}<br>Šifřiček: {{ .Stats.SolvedMiniCiphers }}/{{ .Stats.FoundMiniCiphers }} z {{ len $.Ciphers.MiniCiphers }}{{ end }}
-			<br>Nápověd: {{ .Stats.UsedHints }}
-			<br>Přeskočení: {{ .Stats.UsedSkips }}
+			{{ if .Stats.UsedHints }}<br>Nápověd: {{ .Stats.UsedHints }}{{ end }}
+			{{ if .Stats.UsedSkips }}<br>Přeskočení: {{ .Stats.UsedSkips }}{{ end }}
 			</small>
 		</th>
 		{{ if $.Ciphers.Simple -}}

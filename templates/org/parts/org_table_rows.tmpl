@@ -18,12 +18,15 @@
 	{{- if not .NotCipher -}}
 	<div class="flex">
 		{{ if $status.Arrival }}<span class="status-arrival" title="Čas příchodu">{{ $status.Arrival | timestamp_hint }}</span>{{ end }}
-		{{ if $status.Hint }}<span class="status-hint" title="Nápověda vydána">💡 {{ $status.Hint | timestamp_hint }}</span>{{ end }}
+		{{ if $status.Hint }}<span class="status-hint" title="Nápověda vydána">💡 {{ $status.Hint | timestamp_hint }}
+			{{- if $.Game.HasMiniCipherHints }} <small class="hint" title="Změna šifřičkového konta">[{{ $status.HintScore }}]</small></span>{{ end -}}
+		{{ end }}
 		{{ if $status.Skip }}<span class="status-skip" title="Přeskočeno">⏩ {{ $status.Skip | timestamp_hint }}</span>{{ end }}
 		{{ if $status.Solved }}<span class="status-solved" title="Vyřešeno">✅ {{ $status.Solved | timestamp_hint }}
 			{{- if eq $.Game.OrderMode "points" }}<br>Bodů: <b>{{ $status.Points }}</b>
 				{{- if $status.ExtraPoints }} <small>(extra: {{ $status.ExtraPoints }})</small>{{ end -}}
 			{{ end -}}
+			{{- if and $.Game.HasMiniCipherHints (eq .Type "mini-cipher") }} <small class="hint" title="Změna šifřičkového konta">[{{ $status.HintScore }}]</small>{{ end -}}
 		</span>{{ end }}
 		{{ if eq $.Type "dashboard" }}<span class="link"><small><a href="{{ basedir }}/org/team/{{ $.Team.Config.ID }}/cipher/{{ .ID }}">Detail šifry</a></small></span>{{ end }}
 	</div>

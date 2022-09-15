@@ -62,6 +62,7 @@ type CipherStatus struct {
 	Hint        *time.Time `db:"hint"`
 	Skip        *time.Time `db:"skip"`
 	ExtraPoints int        `db:"extra_points"`
+	HintScore   int        `db:"hint_score"`
 	// Not in DB, calculated in Shrecker
 	Config *CipherConfig `db:"-"`
 	Points int           `db:"-"`

@@ -1,7 +1,7 @@
 {{ define "team_ciphers_list" }}
 {{ $enabled := not (or (.GameConfig.Ended now) (.GameConfig.NotStarted now)) }}
 {{ range .Ciphers}}
-	{{- $is_companion := ne .Team $.Team.ID -}}
+	{{- $is_companion := ne .Team $.Team.GetConfig.ID -}}
 	<div class="cipher {{ if .Solved }}solved{{ else if .Skip }}skip{{ end }}{{ if $is_companion }} companion{{ end }}" id="cipher-{{ .Config.ID }}">
 		<div class="title">
 		<strong>{{ if and .Config.File $.Game.CouldTeamDownloadCiphers }}<a href="{{ basedir }}/cipher/{{ .Config.ID }}/download">{{ .Config.Name }}</a>{{ else }}{{ .Config.Name }}{{ end }}</strong>
@@ -28,14 +28,18 @@
 			<input type="hidden" name="cipher" value="{{ .Config.ID }}">
 			<div class="btn-group">
 				{{- if $displayHintButton }}
+				{{ $hint := hintAllowed $.Team . }}
 				<input type="submit" name="hint" class="btn btn-sm btn-primary" value="Požádat o nápovědu"
-					{{- if lt ( now.Sub .Arrival ) $.Game.HintLimit }} disabled title="Nápovědu lze získat nejdříve {{ $.Game.HintLimit }} po příchodu" data-countdown-disabled="{{ .Arrival.Add $.Game.HintLimit | timestamp_js }}"
-					{{- end }} onclick="return confirm('Opravdu požádat o nápovědu k šifře {{ .Config.Name }}? Tato akce nelze vzít zpátky');">
+					{{- if not $hint.Allowed }} disabled {{ if not $hint.Limit.IsZero }}data-countdown-disabled="{{ $hint.Limit | timestamp_js }}" {{ end }}
+					{{- end }}{{ if $hint.Title }} title="{{ $hint.Title }}" {{ end -}}
+					 onclick="return confirm('Opravdu požádat o nápovědu k šifře {{ .Config.Name }}? Tato akce nelze vzít zpátky');">
 				{{- end }}
 				{{- if $displaySkipButton}}
+				{{ $skip := skipAllowed $.Team . }}
 				<input type="submit" name="skip" class="btn btn-sm btn-danger" value="Přeskočit šifru"
-					{{- if lt ( now.Sub .Arrival ) $.Game.SkipLimit }} disabled title="Přeskočit šifru lze získat nejdříve {{ $.Game.SkipLimit }} po příchodu" data-countdown-disabled="{{ .Arrival.Add $.Game.SkipLimit | timestamp_js }}"
-					{{- end }} onclick="return confirm('Opravdu přeskočit šifru {{ .Config.Name }}? Tato akce nelze vzít zpátky');">
+					{{- if not $skip.Allowed }} disabled {{ if not $skip.Limit.IsZero }}data-countdown-disabled="{{ $skip.Limit | timestamp_js }}" {{ end }}
+					{{- end }}{{- if $skip.Title }} title="{{ $skip.Title }}" {{ end -}}
+					onclick="return confirm('Opravdu přeskočit šifru {{ .Config.Name }}? Tato akce nelze vzít zpátky');">
 				{{- end }}
 			</div>
 		</form>

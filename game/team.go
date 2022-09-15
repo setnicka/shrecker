@@ -91,6 +91,7 @@ type TeamStats struct {
 	FoundSimple       int
 	UsedHints         int
 	UsedSkips         int
+	HintScore         int
 }
 
 // GetStats computes statistics about ciphers based on cipher statuses from the DB
@@ -124,6 +125,7 @@ func (t *Team) GetStats() (TeamStats, error) {
 		if status.Skip != nil {
 			stats.UsedSkips++
 		}
+		stats.HintScore += status.HintScore
 	}
 	return stats, nil
 }
@@ -192,6 +194,32 @@ func (t *Team) LogPosition(pos Point) error {
 	return t.tx.Update("team_status", t.status, "WHERE team=:team", nil)
 }
 
+// TestHintAllowed tests if a hint for given cipher could be issued (used from templates)
+func (t *Team) TestHintAllowed(cipher *CipherConfig, status CipherStatus) (bool, string, time.Time) {
+	d := t.Now().Sub(status.Arrival)
+	stats, _ := t.GetStats()
+	title := ""
+
+	switch t.gameConfig.HintMode {
+	case HintsFree:
+		if d < t.gameConfig.HintLimit {
+			return false, fmt.Sprintf("Zatím uběhlo jen %v od příchodu na šifru, nápověda je dostupná až po %v od příchodu", d.Round(time.Second), t.gameConfig.HintLimit), status.Arrival.Add(t.gameConfig.HintLimit)
+		}
+	case HintsMiniCiphers:
+		if stats.HintScore <= 0 && !t.gameConfig.HintMCAllowNegative {
+			return false, fmt.Sprintf("Nemáte žádné nepoužité šifřičky pro zisk nápovědy, nejdříve nějakou vyluštěte"), time.Time{}
+		}
+		if d < t.gameConfig.HintLimit {
+			return false, fmt.Sprintf("Zatím uběhlo jen %v od příchodu na šifru, nápověda je dostupná až po %v od příchodu", d.Round(time.Second), t.gameConfig.HintLimit), status.Arrival.Add(t.gameConfig.HintLimit)
+		}
+
+		if stats.HintScore <= 0 {
+			title = "Nemáte žádné nepoužité šifřičky, ale můžete si vzít nápovědu na dluh"
+		}
+	}
+	return true, title, time.Time{}
+}
+
 // RequestHint tests if hint is possible for this cipher and if so it logs it
 // and returns message which should be returned to the team
 func (t *Team) RequestHint(cipher *CipherConfig, status CipherStatus) (string, string, bool, error) {
@@ -201,13 +229,23 @@ func (t *Team) RequestHint(cipher *CipherConfig, status CipherStatus) (string, s
 		return "info", "Tuto šifru jste již vyřešili", false, nil
 	} else if cipher.HintText == "" {
 		return "info", "Tato šifra nemá nápovědu", false, nil
-	} else if d := t.Now().Sub(status.Arrival); d < t.gameConfig.HintLimit {
-		return "error", fmt.Sprintf("Zatím uběhlo jen %v od příchodu na šifru, nápověda je dostupná až po %v od příchodu", d.Round(time.Second), t.gameConfig.HintLimit), false, nil
 	} else if status.Hint == nil {
+		if allowed, reason, _ := t.TestHintAllowed(cipher, status); !allowed {
+			return "error", reason, false, nil
+		}
 		err := t.LogCipherHint(cipher)
 		return "success", fmt.Sprintf("Nápověda: %s", cipher.HintText), true, err
 	}
 	return "success", fmt.Sprintf("Nápověda: %s", cipher.HintText), false, nil
+}
+
+// TestSkipAllowed tests if a skip for given cipher could be done (used from templates)
+func (t *Team) TestSkipAllowed(cipher *CipherConfig, status CipherStatus) (bool, string, time.Time) {
+	d := t.Now().Sub(status.Arrival)
+	if d < t.gameConfig.SkipLimit {
+		return false, fmt.Sprintf("Zatím uběhlo jen %v od příchodu na šifru, přeskočení je dostupné až po %v od příchodu", d.Round(time.Second), t.gameConfig.SkipLimit), status.Arrival.Add(t.gameConfig.SkipLimit)
+	}
+	return true, "", time.Time{}
 }
 
 // RequestSkip tests if skip is possible for this cipher and if so it logs it
@@ -217,9 +255,10 @@ func (t *Team) RequestSkip(cipher *CipherConfig, status CipherStatus) (string, s
 		return "info", "Tuto šifru jste již vyřešili", false, nil
 	} else if cipher.SkipText == "" {
 		return "info", "Tato šifra nelze přeskočit", false, nil
-	} else if d := t.Now().Sub(status.Arrival); d < t.gameConfig.SkipLimit {
-		return "error", fmt.Sprintf("Zatím uběhlo jen %v od příchodu na šifru, přeskočení je dostupné až po %v od příchodu", d.Round(time.Second), t.gameConfig.SkipLimit), false, nil
 	} else if status.Skip == nil {
+		if allowed, reason, _ := t.TestSkipAllowed(cipher, status); !allowed {
+			return "error", reason, false, nil
+		}
 		err := t.LogCipherSkip(cipher)
 		return "success", fmt.Sprintf("Další stanoviště: %s", cipher.SkipText), true, err
 	}
@@ -264,7 +303,7 @@ func (t *Team) LogCipherArrival(cipher CipherConfig) error {
 	return nil
 }
 
-func (t *Team) logCipher(cipher *CipherConfig, action string) error {
+func (t *Team) logCipher(cipher *CipherConfig, action string, callback func(*CipherStatus)) error {
 	if _, err := t.GetCipherStatus(); err != nil {
 		return err
 	}
@@ -285,6 +324,9 @@ func (t *Team) logCipher(cipher *CipherConfig, action string) error {
 	}
 	now := t.Now()
 	*field = &now
+	if callback != nil {
+		callback(&cs)
+	}
 	t.cipherStatus[cipher.ID] = cs
 	log.Infof("Team '%s' (ID '%s'): %s on cipher '%s'", t.teamConfig.Name, t.teamConfig.ID, action, cipher.ID)
 	t.incHash()
@@ -292,13 +334,43 @@ func (t *Team) logCipher(cipher *CipherConfig, action string) error {
 }
 
 // LogCipherSolved logs solved time of the CipherStatus record in DB
-func (t *Team) LogCipherSolved(cipher *CipherConfig) error { return t.logCipher(cipher, "solved") }
+func (t *Team) LogCipherSolved(cipher *CipherConfig) error {
+	return t.logCipher(cipher, "solved", func(status *CipherStatus) {
+		if cipher.Type == MiniCipher && t.gameConfig.HasMiniCipherHints() {
+			status.HintScore++
+		}
+		log.Infof("Team '%s' (ID '%s'): hint_score++ on solved mini-cipher cipher '%s'", t.teamConfig.Name, t.teamConfig.ID, cipher.ID)
+	})
+}
 
 // LogCipherHint logs hint time of the CipherStatus record in DB
-func (t *Team) LogCipherHint(cipher *CipherConfig) error { return t.logCipher(cipher, "hint") }
+func (t *Team) LogCipherHint(cipher *CipherConfig) error {
+	stats, err := t.GetStats()
+	if err != nil {
+		return err
+	}
+
+	return t.logCipher(cipher, "hint", func(status *CipherStatus) {
+		if t.gameConfig.HasMiniCipherHints() {
+			if stats.HintScore > 0 {
+				status.HintScore--
+				log.Infof(
+					"Team '%s' (ID '%s'): Used hint on cipher '%s', hint_score-- (new hint_score: %d)",
+					t.teamConfig.Name, t.teamConfig.ID, cipher.ID, status.HintScore,
+				)
+			} else {
+				status.HintScore -= t.gameConfig.HintMCNegativePrice
+				log.Infof(
+					"Team '%s' (ID '%s'): Used hint on cipher '%s', hint_score decreased by %d (new hint_score: %d)",
+					t.teamConfig.Name, t.teamConfig.ID, cipher.ID, t.gameConfig.HintMCNegativePrice, status.HintScore,
+				)
+			}
+		}
+	})
+}
 
 // LogCipherSkip logs skip time of the CipherStatus record in DB
-func (t *Team) LogCipherSkip(cipher *CipherConfig) error { return t.logCipher(cipher, "skip") }
+func (t *Team) LogCipherSkip(cipher *CipherConfig) error { return t.logCipher(cipher, "skip", nil) }
 
 // SetCipherExtraPoints logs extra points to given CipherStatus
 func (t *Team) SetCipherExtraPoints(cipher CipherConfig, extraPoints int) error {

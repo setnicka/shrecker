@@ -69,7 +69,9 @@
 			<button name="submit" value="set-solved" class="btn btn-sm btn-success">✅ Označit jako vyřešenou</button>
 		</form>{{ end }}
 	{{ end }}</td></tr>
-	<tr><td>Nápověda</td><td>{{ if .CipherStatus.Hint }}💡 vydaná {{ .CipherStatus.Hint | timestamp }}{{ else }}
+	<tr><td>Nápověda</td><td>{{ if .CipherStatus.Hint }}💡 vydaná {{ .CipherStatus.Hint | timestamp }}
+		{{- if $game.HasMiniCipherHints }}<br>Změna šifřičkového konta: <b>{{ .CipherStatus.HintScore }}</b>{{ end }}
+		{{ else }}
 		nevydaná {{ if not (or .CipherStatus.Skip .CipherStatus.Solved) }}<form method="POST" class="float-right" onsubmit="return confirm('Opravdu označit jako že nápověda byla vydána? Pokud šifra obsahuje textovou nápovědu, tak se zobrazí účastníkům v jejich části systému.');">
 			{{ .CSRF }}
 			<button name="submit" value="set-hint" class="btn btn-sm btn-warning">💡 Vydat nápovědu</button>

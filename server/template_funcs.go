@@ -49,6 +49,12 @@ func timestampFormat(t time.Time) template.HTML {
 	return template.HTML(fmt.Sprintf("%s (<span data-countdown='%s'>%s</span>)", ts, t.Format(time.RFC3339), ds))
 }
 
+type allowedResult struct {
+	Allowed bool
+	Title   string
+	Limit   time.Time
+}
+
 var (
 	templateFuncs = template.FuncMap{
 		"timestamp_js": func(t time.Time) string { return t.Format(time.RFC3339) },
@@ -99,5 +105,13 @@ var (
 			return dict, nil
 		},
 		"now": func() time.Time { return time.Now() },
+		"hintAllowed": func(t *game.Team, c game.CipherStatus) allowedResult {
+			allowed, title, limit := t.TestHintAllowed(c.Config, c)
+			return allowedResult{Allowed: allowed, Title: title, Limit: limit}
+		},
+		"skipAllowed": func(t *game.Team, c game.CipherStatus) allowedResult {
+			allowed, title, limit := t.TestSkipAllowed(c.Config, c)
+			return allowedResult{Allowed: allowed, Title: title, Limit: limit}
+		},
 	}
 )

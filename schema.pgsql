@@ -21,6 +21,7 @@ CREATE TABLE cipher_status (
 	hint		timestamptz	DEFAULT NULL,
 	skip		timestamptz	DEFAULT NULL,
 	extra_points	int		DEFAULT 0,
+	hint_score	int		DEFAULT 0,
 	UNIQUE (cipher, team),
 	FOREIGN KEY(team) REFERENCES team_status(team) ON DELETE CASCADE
 );

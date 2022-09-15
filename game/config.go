@@ -13,6 +13,7 @@ import (
 )
 
 type gameMode string
+type hintMode string
 type orderMode string
 type cipherType string
 
@@ -22,6 +23,12 @@ const (
 	GameNormalMap   gameMode = "normal-map"
 	GameOnlineCodes gameMode = "online-codes"
 	GameOnlineMap   gameMode = "online-map"
+)
+
+// Hint modes
+const (
+	HintsFree        hintMode = "free"
+	HintsMiniCiphers hintMode = "mini-ciphers"
 )
 
 // Order modes
@@ -69,9 +76,12 @@ type Config struct {
 
 	AutologPosition bool `ini:"autolog_position"`
 
-	// Time settins
-	HintLimit time.Duration `ini:"hint_limit"`
-	SkipLimit time.Duration `ini:"skip_limit"`
+	// Hint settings
+	HintMode            hintMode      `ini:"hint_mode"`
+	HintMCAllowNegative bool          `ini:"hint_mini_ciphers_allow_negative"`
+	HintMCNegativePrice int           `ini:"hint_mini_ciphers_negative_price"`
+	HintLimit           time.Duration `ini:"hint_limit"`
+	SkipLimit           time.Duration `ini:"skip_limit"`
 
 	OrderPickupMessage bool `ini:"order_pickup_message"`
 	LastPickupMessage  bool `ini:"last_pickup_message"`

@@ -141,6 +141,7 @@ func (s *Server) teamLoginPost(w http.ResponseWriter, r *http.Request) {
 
 type teamIndexData struct {
 	teamGeneralData
+	Team          *game.Team
 	TeamStatus    *game.TeamStatus
 	TeamPoints    int
 	TeamStats     game.TeamStats
@@ -328,6 +329,7 @@ func (s *Server) teamIndex(w http.ResponseWriter, r *http.Request) {
 	s.executeTemplate(
 		w, templateName, teamIndexData{
 			teamGeneralData: s.getTeamGeneralData(title, w, r),
+			Team:            team,
 			TeamStatus:      status,
 			TeamPoints:      points,
 			TeamStats:       stats,

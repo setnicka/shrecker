@@ -4,31 +4,14 @@
 {{ template "part_head_end" .}}
 <body>
 
-{{ $now := .Now }}
-
 <div id="panel">
 {{ template "part_messageBox" . }}
 
-<div id="team-status">
-	<form method="POST" action="{{ basedir }}/logout" class="pull-right">
-		{{ .CSRF }}
-		<button class="btn btn-sm btn-secondary">Odhlásit</button>
-	</form>
-	<h2>Tým: {{.TeamConfig.Name}}</h2>
-	<ul>
-		<li>Pozice: <a href="#" onclick="map.panTo({{ .TeamStatus.Point | latlon }});">{{ .TeamStatus.Point | latlon_human }}</a></li>
-		{{ if .TeamConfig.Jitsi }}<li>Jitsi meeting: <a target="_blank" href="https://meet.jit.si/{{ .TeamConfig.Jitsi }}"><code>{{ .TeamConfig.Jitsi }}</code></a></li>{{ end }}
-		{{ if eq .GameConfig.OrderMode "points" }}<li>Získané body: <b>{{ .TeamPoints }}</b></li>{{ end }}
-		{{ if .TeamStatus.CooldownTo }}{{ if $now.Before .TeamStatus.CooldownTo }}<li>Další pohyb bude možný v {{ .TeamStatus.CooldownTo | timestamp }}</li>{{ end }}{{ end }}
-		{{ if .GameConfig.NotStarted $now }}<li>Hra začíná v {{ .GameConfig.Start | timestamp }}</li>
-		{{- else if .GameConfig.Ended $now }}<li>Hra skončila v {{ .GameConfig.End | timestamp }}</li>
-		{{- else if .GameConfig.End }}<li>Hra končí v {{ .GameConfig.End | timestamp }}</li>{{ end }}
-	</ul>
-</div>
+{{ template "team_status_header" dict "Team" .Team "TeamStatus" .TeamStatus "TeamPoints" .TeamPoints "TeamStats" .TeamStats "GameConfig" .GameConfig "CSRF" .CSRF }}
 
 <div id="cipher-list" class="cipher-list">
 <h2>Šifry</h2>
-{{ template "team_ciphers_list" dict "Ciphers" .Ciphers "Game" .GameConfig "CSRF" .CSRF }}
+{{ template "team_ciphers_list" dict "Ciphers" .Ciphers "Team" .Team "Game" .GameConfig "CSRF" .CSRF }}
 </div>
 </div>
 

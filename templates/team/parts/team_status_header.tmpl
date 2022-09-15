@@ -1,0 +1,26 @@
+{{ define "team_status_header" }}
+{{ $now := now }}
+<div id="team-status">
+	<div class="container">
+	<form method="POST" action="{{ basedir }}/logout" class="float-right">
+		{{ .CSRF }}
+		<button class="btn btn-sm btn-secondary">Odhlásit se</button>
+	</form>
+	<h2><small>Tým:</small> {{.Team.GetConfig.Name}}</h2>
+	<ul>
+		{{ if eq .GameConfig.Mode "online-map" }}<li>Pozice: <a href="#" onclick="map.panTo({{ .TeamStatus.Point | latlon }});">{{ .TeamStatus.Point | latlon_human }}</a></li>{{ end }}
+		{{ if .Team.GetConfig.Jitsi }}<li>Jitsi meeting: <a target="_blank" href="https://meet.jit.si/{{ .Team.GetConfig.Jitsi }}"><code>{{ .Team.GetConfig.Jitsi }}</code></a></li>{{ end }}
+		{{ if .TeamStatus.CooldownTo }}{{ if $now.Before .TeamStatus.CooldownTo }}<li>Další pohyb bude možný v {{ .TeamStatus.CooldownTo | timestamp }}</li>{{ end }}{{ end }}
+
+		{{ if .GameConfig.NotStarted $now }}<li>Hra začíná v {{ .GameConfig.Start | timestamp }}</li>
+		{{- else if .GameConfig.Ended $now }}<li>Hra skončila v {{ .GameConfig.End | timestamp }}</li>
+		{{- else if .GameConfig.HasEnd }}<li>Hra končí v {{ .GameConfig.End | timestamp }}</li>{{ end }}
+
+		{{ if eq .GameConfig.OrderMode "points" }}<li>Získané body: <b>{{ .TeamPoints }}</b></li>{{ end }}
+		{{ if $.GameConfig.HasMiniCipherHints }}<li>Šifřičkové konto: <b>{{ .TeamStats.HintScore }}</b></li>{{ end }}
+		{{ if .TeamStats.UsedHints }}<li>Použito nápověd: {{ .TeamStats.UsedHints }}</li>{{ end }}
+		{{ if .TeamStats.UsedSkips }}<li>Použito přeskočení: {{ .TeamStats.UsedSkips }}</li>{{ end }}
+	</ul>
+	</div>
+</div>
+{{ end }}

@@ -25,7 +25,7 @@
 		</a>
 	{{ end -}}
 	<ul>
-		{{ if eq $game.OrderMode "points" }}<li>Získané body: <b>{{ .Points }}</b></li>{{ end }}
+		{{ if $game.HasPoints }}<li>Získané body: <b>{{ .Points }}</b></li>{{ end }}
 		{{ if .Config.Jitsi }}<li>Jitsi meeting: <a target="_blank" href="https://meet.jit.si/{{ .Config.Jitsi }}"><code>{{ .Config.Jitsi }}</code></a></li>{{ end }}
 		{{ if .Config.Members -}}{{ $first := true -}}
 		<li>Členové: {{ range $name, $contact := .Config.Members -}}

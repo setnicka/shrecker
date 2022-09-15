@@ -83,6 +83,7 @@
 			<button name="submit" value="set-skip" class="btn btn-sm btn-danger">⏩ Přeskočit šifru</button>
 		</form>{{ end }}
 	{{ end }}</td></tr>
+	{{ if $game.HasPoints}}
 	{{ if not .CipherStatus.Skip }}
 	<tr><td>Extra body</td><td>
 		<form method="POST">
@@ -93,6 +94,7 @@
 	</td></tr>
 	{{ end }}
 	<tr><th class="hint" title="Včetně extra bodů">Získané body</th><th>{{ .CipherStatus.Points }}</th></tr>
+	{{ end }}
 {{ end }}
 </table>
 

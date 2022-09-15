@@ -50,7 +50,7 @@
 <h3>Status</h3>
 
 <table class="table table-sm">
-	{{ if eq $game.OrderMode "points" }}<tr><th>Získané body</th><td><b>{{ .Team.Points }}</b></td></tr>{{ end }}
+	{{ if $game.HasPoints }}<tr><th>Získané body</th><td><b>{{ .Team.Points }}</b></td></tr>{{ end }}
 	{{ if $game.HasMiniCipherHints }}<tr><th>Šifřičkové konto</th><td><b>{{ .Team.Stats.HintScore }}</b></td></tr>{{ end }}
 	<tr><td>Použito nápověd</td><td>{{ .Team.Stats.UsedHints }}</td></tr>
 	<tr><td>Použito přeskočení</td><td>{{ .Team.Stats.UsedSkips }}</td></tr>

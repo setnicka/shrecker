@@ -23,7 +23,7 @@
 		{{ end }}
 		{{ if $status.Skip }}<span class="status-skip" title="Přeskočeno">⏩ {{ $status.Skip | timestamp_hint }}</span>{{ end }}
 		{{ if $status.Solved }}<span class="status-solved" title="Vyřešeno">✅ {{ $status.Solved | timestamp_hint }}
-			{{- if eq $.Game.OrderMode "points" }}<br>Bodů: <b>{{ $status.Points }}</b>
+			{{- if $.Game.HasPoints }}<br>Bodů: <b>{{ $status.Points }}</b>
 				{{- if $status.ExtraPoints }} <small>(extra: {{ $status.ExtraPoints }})</small>{{ end -}}
 			{{ end -}}
 			{{- if and $.Game.HasMiniCipherHints (eq .Type "mini-cipher") }} <small class="hint" title="Změna šifřičkového konta">[{{ $status.HintScore }}]</small>{{ end -}}

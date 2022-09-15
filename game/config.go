@@ -33,6 +33,7 @@ const (
 
 // Order modes
 const (
+	OrderNone   orderMode = "none"
 	OrderPoints orderMode = "points"
 )
 

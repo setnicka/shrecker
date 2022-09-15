@@ -6,7 +6,7 @@
 		<div class="title">
 		<strong>{{ if and .Config.File $.Game.CouldTeamDownloadCiphers }}<a href="{{ basedir }}/cipher/{{ .Config.ID }}/download">{{ .Config.Name }}</a>{{ else }}{{ .Config.Name }}{{ end }}</strong>
 		{{ if .Config.NotCipher }}{{ else }}
-		{{ if and (eq $.Game.OrderMode "points") .Points -}}
+		{{ if and $.Game.HasPoints .Points -}}
 			<small class="float-right text-muted">Získané body: <b>{{ .Points }}</b>
 				{{- if .ExtraPoints }} ({{ if gt .ExtraPoints 0 }}extra body{{ else }}penalizace{{ end }}: <b>{{ .ExtraPoints }}</b>){{ end -}}
 			</small>

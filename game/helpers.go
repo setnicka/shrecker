@@ -49,6 +49,9 @@ func (c *Config) CouldTeamDownloadCiphers() bool {
 // HasMiniCipherHints returns true if mini ciphers are used to provide hints
 func (c *Config) HasMiniCipherHints() bool { return c.HintMode == HintsMiniCiphers }
 
+// HasPoints returns true if points are used for ordering
+func (c *Config) HasPoints() bool { return c.OrderMode == OrderPoints }
+
 // HasMap returns true if the game has map
 func (c *Config) HasMap() bool { return c.Mode == GameNormalMap || c.Mode == GameOnlineMap }
 

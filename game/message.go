@@ -10,10 +10,9 @@ import (
 )
 
 const (
-	codeSifricka = "SIFRICKA" // SIFRICKA <CODE1> <CODE2> <...>	- NOT IMPLEMENTED YET
-	codeHint     = "HINT"     // HINT <CODE> ...
-	codeHintAlt  = "HELP"     // HELP <CODE> ...
-	codeSkip     = "SKIP"     // SKIP <CODE> ...
+	codeHint    = "HINT" // HINT <CODE> ...
+	codeHintAlt = "HELP" // HELP <CODE> ...
+	codeSkip    = "SKIP" // SKIP <CODE> ...
 
 	actionHint    = codeHint
 	actionSkip    = codeSkip
@@ -43,16 +42,7 @@ func (t *Team) ProcessMessage(text string, sender string, smsID int) (string, st
 	log.Printf("Processing message '%s' from team %s with code '%s'", text, t.teamConfig.ID, code)
 
 	// 1. Handle special
-	if code == codeSifricka {
-		if len(parts) == 1 {
-			return "error", "Schází kódy šifřiček", nil
-		}
-		codes := strings.Fields(parts[1])
-		if len(codes) == 0 {
-			return "error", "Schází kódy šifřiček", nil
-		}
-		return t.processSifricky(codes)
-	}
+	// NO SPECIAL YET
 
 	// 2. Split parts of message
 	if code == codeHintAlt {
@@ -182,9 +172,4 @@ func (t *Team) ProcessMessage(text string, sender string, smsID int) (string, st
 			return msg("info", "Kód tohoto stanoviště jsme již od vás přijali, nemusíte ho zadávat vícekrát.")
 		}
 	}
-}
-
-func (t *Team) processSifricky(codes []string) (string, string, error) {
-	// FIXME: imlementace
-	return "danger", "Šifřičky zatím nebyly implementovány", nil
 }

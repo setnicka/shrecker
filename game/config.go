@@ -19,9 +19,9 @@ type cipherType string
 // Modes of the game
 const (
 	GameNormal      gameMode = "normal"
-	GameNormalMap            = "normal-map"
-	GameOnlineCodes          = "online-codes"
-	GameOnlineMap            = "online-map"
+	GameNormalMap   gameMode = "normal-map"
+	GameOnlineCodes gameMode = "online-codes"
+	GameOnlineMap   gameMode = "online-map"
 )
 
 // Order modes
@@ -159,11 +159,9 @@ func (g *Game) initStatus() error {
 		if err != nil {
 			return err
 		}
-		if config.Mode == GameOnlineMap {
-			// Discover ciphers from this starting position
-			if _, err := team.DiscoverCiphers(); err != nil {
-				return err
-			}
+		// Discover ciphers from this starting position and ciphers visible from the start
+		if _, err := team.DiscoverCiphers(); err != nil {
+			return err
 		}
 	}
 	return tx.Commit()
@@ -289,10 +287,12 @@ func (c *Config) loadTeams(teamsFile string) error {
 		}
 		logins[team.Login] = team.ID
 
-		if otherID, found := smsCodes[team.SMSCode]; found {
-			return errors.Errorf("Config error: Teams '%s' and '%s' have same SMS code '%s'!", team.ID, otherID, team.SMSCode)
+		if team.SMSCode != "" {
+			if otherID, found := smsCodes[team.SMSCode]; found {
+				return errors.Errorf("Config error: Teams '%s' and '%s' have same SMS code '%s'!", team.ID, otherID, team.SMSCode)
+			}
+			smsCodes[team.SMSCode] = team.ID
 		}
-		smsCodes[team.SMSCode] = team.ID
 	}
 
 	// Check companions

@@ -328,7 +328,7 @@ func (t *Team) DiscoverCiphers() ([]CipherConfig, error) {
 		if _, found := t.cipherStatus[cipher.ID]; found {
 			continue // already found
 		}
-		if cipher.StartVisible || cipher.DiscoverableFromPoint(t.status.Point, t.cipherStatus) {
+		if cipher.StartVisible || (t.gameConfig.Mode == GameOnlineMap && cipher.DiscoverableFromPoint(t.status.Point, t.cipherStatus)) {
 			discovered = append(discovered, cipher)
 			if err := t.LogCipherArrival(cipher); err != nil {
 				return nil, err

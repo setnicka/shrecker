@@ -327,6 +327,13 @@ func (s *Server) orgTeamCipher(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			err = team.SetCipherExtraPoints(*cipherConfig, points)
+		case "add-hint-score":
+			add, ierr := strconv.Atoi(r.FormValue("add-hint-score"))
+			if ierr != nil {
+				http.Error(w, ierr.Error(), http.StatusBadRequest)
+				return
+			}
+			err = team.AddHintScore(*cipherConfig, add)
 		}
 
 		if err != nil {

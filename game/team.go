@@ -387,6 +387,21 @@ func (t *Team) SetCipherExtraPoints(cipher CipherConfig, extraPoints int) error 
 	return t.tx.Update("cipher_status", cs, "WHERE team=:team AND cipher=:cipher", []string{"team", "cipher"})
 }
 
+// AddHintScore adds given value to the CipherStatus field HintScore
+func (t *Team) AddHintScore(cipher CipherConfig, add int) error {
+	if _, err := t.GetCipherStatus(); err != nil {
+		return err
+	}
+	cs, found := t.cipherStatus[cipher.ID]
+	if !found {
+		return errors.Errorf("Cannot add hint score on not arrived cipher")
+	}
+	cs.HintScore += add
+	t.cipherStatus[cipher.ID] = cs
+	t.incHash()
+	return t.tx.Update("cipher_status", cs, "WHERE team=:team AND cipher=:cipher", []string{"team", "cipher"})
+}
+
 // DiscoverCiphers test all not yet discovered ciphers (without CipherStatus in DB)
 // and calls LogCipherArrival on all that could be discovered.
 func (t *Team) DiscoverCiphers() ([]CipherConfig, error) {

@@ -16,6 +16,13 @@ if (typeof L !== 'undefined') {
 	var cipherIcon = L.ExtraMarkers.icon({
 		icon: 'fa-file',
 		shape: 'penta',
+		markerColor: 'red',
+		svg: true,
+		prefix: 'fa'
+	});
+	var simpleIcon = L.ExtraMarkers.icon({
+		icon: 'fa-question-circle-o',
+		shape: 'circle',
 		markerColor: 'yellow',
 		svg: true,
 		prefix: 'fa'

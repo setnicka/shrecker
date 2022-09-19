@@ -25,7 +25,8 @@ L.tileLayer('https://m{s}.mapserver.mapy.cz/turist-m/{z}-{x}-{y}', {
 	subdomains: "1234",
 }).addTo(map);
 
-{{ range .Ciphers }}
+{{ range .Ciphers.Ciphers }}
+	{{ if .Position.Point.IsZero }}{{ continue }}{{ end }}
 	L.circle({{ .Position.Point | latlon }}, {
 		color: 'yellow',
 		fillColor: '#fbff94',
@@ -37,6 +38,27 @@ L.tileLayer('https://m{s}.mapserver.mapy.cz/turist-m/{z}-{x}-{y}', {
 		title: "{{ .Name }}",
 		icon: cipherIcon,
 	}).addTo(map).on('click', function() {highlightCipher("{{ .ID }}")});
+{{ end }}
+{{ range .Ciphers.MiniCiphers }}
+	{{ if .Position.Point.IsZero }}{{ continue }}{{ end }}
+	L.circle({{ .Position.Point | latlon }}, {
+		color: 'yellow',
+		fillColor: '#fbff94',
+		fillOpacity: 0.5,
+		radius: {{ .Position.Radius }}
+	}).addTo(map);
+
+	L.marker({{ .Position.Point | latlon }}, {
+		title: "{{ .Name }}",
+		icon: cipherIcon,
+	}).addTo(map).on('click', function() {highlightCipher("{{ .ID }}")});
+{{ end }}
+{{ range .Ciphers.Simple }}
+	{{ if .Position.Point.IsZero }}{{ continue }}{{ end }}
+	L.marker({{ .Position.Point | latlon }}, {
+		title: "{{ .Name }}",
+		icon: simpleIcon,
+	}).addTo(map);
 {{ end }}
 
 var displayedPath;

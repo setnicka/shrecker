@@ -74,6 +74,7 @@ type Config struct {
 	StartLon       float64 `ini:"start_lon"`
 	MapDefaultZoom int     `ini:"map_default_zoom"`
 	MapSpeed       float64 `ini:"map_speed"`
+	MapApikey      string  `ini:"map_apikey"`
 
 	AutologPosition bool `ini:"autolog_position"`
 

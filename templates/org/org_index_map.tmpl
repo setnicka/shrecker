@@ -20,9 +20,10 @@ var map = L.map('orgomapa', {
 });
 var hash = new L.Hash(map);
 
-L.tileLayer('https://m{s}.mapserver.mapy.cz/turist-m/{z}-{x}-{y}', {
-	attribution: "<img src='https://mapy.cz/img/logo-small.svg' /> © Seznam.cz,a.s, © Přispěvatelé <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a>, © NASA",
-	subdomains: "1234",
+L.tileLayer('https://api.mapy.cz/v1/maptiles/outdoor/256/{z}/{x}/{y}?apikey={{.GameConfig.MapApikey}}', {
+	minZoom: 0,
+	maxZoom: 19,
+	attribution: '<a href="https://api.mapy.cz/copyright" target="_blank">&copy; Seznam.cz a.s. a další</a>',
 }).addTo(map);
 
 {{ range .Ciphers.Ciphers }}

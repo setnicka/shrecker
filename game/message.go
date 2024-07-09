@@ -139,7 +139,7 @@ func (t *Team) ProcessMessage(text string, sender string, smsID int) (string, st
 
 			msgParts := []string{"Kód přijat"}
 			if t.gameConfig.OrderPickupMessage {
-				msgParts = append(msgParts, fmt.Sprintf(", jste %d na tomto stanovišti", finalOrder))
+				msgParts = append(msgParts, fmt.Sprintf(", jste %d. na tomto stanovišti", finalOrder))
 			}
 			if t.gameConfig.LastPickupMessage {
 				if finalOrder == len(t.gameConfig.teams) {

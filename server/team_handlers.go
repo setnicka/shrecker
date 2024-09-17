@@ -395,14 +395,14 @@ type teamQuickLogData struct {
 }
 
 func (s *Server) teamQuickLog(w http.ResponseWriter, r *http.Request) {
-	code := chi.URLParam(r, "code")
+	code := strings.ToUpper(chi.URLParam(r, "code"))
 	team, tx, gameConfig := getTeamState(r)
 
 	// Try to find cipher with this arrival of advance code
 	var cipher game.CipherConfig
 	var found bool
 	for _, cipher = range gameConfig.GetCiphers() {
-		if cipher.ArrivalCode == code || cipher.AdvanceCode == code {
+		if strings.ToUpper(cipher.ArrivalCode) == code || strings.ToUpper(cipher.AdvanceCode) == code {
 			found = true
 			break
 		}

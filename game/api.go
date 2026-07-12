@@ -69,6 +69,28 @@ func (g *Game) GetTeamByCode(ctx context.Context, SMSCode string) (*Team, *sqlxp
 // GetTeamsConfigMap returns team configuration in map by team ID
 func (c *Config) GetTeamsConfigMap() map[string]*TeamConfig { return c.teams }
 
+// virtualTeamIDs returns IDs of all virtual teams
+func (c *Config) virtualTeamIDs() []string {
+	ids := []string{}
+	for _, team := range c.teams {
+		if team.Virtual {
+			ids = append(ids, team.ID)
+		}
+	}
+	return ids
+}
+
+// nonVirtualTeamsCount returns the number of non-virtual teams
+func (c *Config) nonVirtualTeamsCount() int {
+	count := 0
+	for _, team := range c.teams {
+		if !team.Virtual {
+			count++
+		}
+	}
+	return count
+}
+
 // LoginTeam returns Team with given login and password or fails with ErrLogin
 // when login and password does not match any team.
 func (g *Game) LoginTeam(login, password string) (*Team, *Config, error) {

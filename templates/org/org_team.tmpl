@@ -9,7 +9,7 @@
 {{ $game := .GameConfig }}
 
 <main>
-<h2>Detail týmu {{ .Team.Config.Name }}</h2>
+<h2>Detail týmu {{ .Team.Config.Name }}{{ if .Team.Config.Virtual }} <span class="badge badge-secondary" title="Tým řeší šifry z domova, nesbírá stanoviště">virtuální</span>{{ end }}</h2>
 
 <div class="row">
 
@@ -18,6 +18,9 @@
 
 <table class="table table-sm">
 	<tr><td>ID</td><td><code>{{ .Team.Config.ID }}</code></td></tr>
+	{{ if .Team.Config.Virtual }}
+	<tr><td class="hint" title="Tým řeší šifry z domova, nesbírá stanoviště a nezapočítává se do kritéria posledního týmu">Typ</td><td>virtuální</td></tr>
+	{{ end }}
 	{{ if .Team.Config.CompanionIDs }}
 	<tr><td class="hint" title="Vidí šifry získané těmito týmy">Sdružené týmy:</td><td>
 		{{ range $i, $id := .Team.Config.CompanionIDs }}{{ if gt $i 0 }}, {{ end }}<a href="{{ $basedir }}/org/team/{{ $id }}">{{ $id }}</a>{{ end }}

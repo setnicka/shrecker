@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
 
@@ -128,22 +129,35 @@ func (t *Team) ProcessMessage(text string, sender string, smsID int) (string, st
 				return "", "", err
 			}
 
-			finalOrder := 0
-			ciphersToStandings := cipher.SharedStandings
-			ciphersToStandings = append(ciphersToStandings, cipher.ID)
-			for _, cipherID := range ciphersToStandings {
-				order := 0
-				t.tx.Get(&order, "SELECT COUNT(team) FROM cipher_status WHERE cipher=$1", cipherID)
-				finalOrder += order
-			}
-
 			msgParts := []string{"Kód přijat"}
-			if t.gameConfig.OrderPickupMessage {
-				msgParts = append(msgParts, fmt.Sprintf(", jste %d. na tomto stanovišti", finalOrder))
-			}
-			if t.gameConfig.LastPickupMessage {
-				if finalOrder == len(t.gameConfig.teams) {
-					msgParts = append(msgParts, " <b>(jste poslední, seberte ho prosím)</b>")
+			// Order/pickup messages are only for non-virtual teams, virtual teams are also excluded from the count
+			if !t.teamConfig.Virtual && (t.gameConfig.OrderPickupMessage || t.gameConfig.LastPickupMessage) {
+				finalOrder := 0
+				ciphersToStandings := cipher.SharedStandings
+				ciphersToStandings = append(ciphersToStandings, cipher.ID)
+				virtualIDs := t.gameConfig.virtualTeamIDs()
+				for _, cipherID := range ciphersToStandings {
+					order := 0
+					if len(virtualIDs) == 0 {
+						t.tx.Get(&order, "SELECT COUNT(team) FROM cipher_status WHERE cipher=$1", cipherID)
+					} else {
+						// NOT IN () is invalid SQL, so exclude only when there are virtual teams
+						query, args, err := sqlx.In("SELECT COUNT(team) FROM cipher_status WHERE cipher=? AND team NOT IN (?)", cipherID, virtualIDs)
+						if err != nil {
+							return "", "", err
+						}
+						t.tx.Get(&order, sqlx.Rebind(sqlx.DOLLAR, query), args...)
+					}
+					finalOrder += order
+				}
+
+				if t.gameConfig.OrderPickupMessage {
+					msgParts = append(msgParts, fmt.Sprintf(", jste %d. na tomto stanovišti", finalOrder))
+				}
+				if t.gameConfig.LastPickupMessage {
+					if finalOrder == t.gameConfig.nonVirtualTeamsCount() {
+						msgParts = append(msgParts, " <b>(jste poslední, seberte ho prosím)</b>")
+					}
 				}
 			}
 			msgParts = append(msgParts, ".")

@@ -126,6 +126,7 @@ type CipherConfig struct {
 type TeamConfig struct {
 	ID           string            `json:"id"`
 	CompanionIDs []string          `json:"companion_ids"` // IDs of other teams that should share information
+	Virtual      bool              `json:"virtual"`       // team that solves ciphers from home (offline)
 	Name         string            `json:"name"`
 	Jitsi        string            `json:"jitsi"` // link for Jitsi room (online-map mode)
 	Login        string            `json:"login"`

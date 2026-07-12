@@ -14,6 +14,7 @@
 {{ range .Teams}}
 <div class="team" id="team-{{ .Config.ID }}">
 	<a href="{{ $basedir }}/org/team/{{ .Config.ID }}" title="Detail týmu"><strong>{{ .Config.Name }}</strong></a>
+	{{ if .Config.Virtual }}<span class="badge badge-secondary" title="Tým řeší šifry z domova, nesbírá stanoviště">virtuální</span>{{ end }}
 	(ID: <code>{{ .Config.ID }}</code>, login: <code>{{ .Config.Login }}</code>{{ if .Config.SMSCode }}, SMS kód: <code>{{ .Config.SMSCode }}</code>{{ end }})
 	{{ if and $game.IsOnline .Config.Members -}}
 		{{ $first := true }}

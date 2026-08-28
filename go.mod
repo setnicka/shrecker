@@ -21,8 +21,6 @@ require (
 	github.com/setnicka/sqlxpp v0.2.0
 	github.com/smartystreets/assertions v1.2.0 // indirect
 	github.com/urfave/cli v1.22.5
-	golang.org/x/sys v0.0.0-20210415045647-66c3f260301c // indirect
-	golang.org/x/term v0.0.0-20210406210042-72f3dc4e9b72 // indirect
-	golang.org/x/text v0.3.3
+	golang.org/x/text v0.3.8
 	gopkg.in/ini.v1 v1.62.0 // indirect
 )
